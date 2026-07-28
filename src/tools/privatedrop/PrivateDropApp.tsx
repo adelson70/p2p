@@ -11,9 +11,9 @@ import { connectionManager } from '@/features/connection/connectionManager';
 import { copySignalingToClipboard } from '@/features/connection/signalingManual';
 import {
   parseSignalingInput,
-  encodeSignalingForQr,
-  renderQrDataUrl,
+  renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
 import type { FileRole } from '@/tools/privatedrop/roles';
 import {
@@ -93,10 +93,7 @@ export function PrivateDropApp({ locale }: { locale: Locale }) {
     };
   }, [onDataChannelReady]);
 
-  const loadQr = async (packet: import('@/features/connection/signalingManual').SignalingPacket) => {
-    const qr = encodeSignalingForQr(packet);
-    return renderQrDataUrl(qr);
-  };
+  const loadQr = renderSignalingQrDataUrl;
 
   const beginFileSender = async () => {
     setPairingError(null);
@@ -187,25 +184,25 @@ export function PrivateDropApp({ locale }: { locale: Locale }) {
     setTimeout(() => setResponseCopied(false), 2000);
   };
 
-  const toggleInviteQr = async () => {
-    if (!showInviteQr) {
-      const packet = connectionManager.refreshLocalPacket('offer');
-      if (packet && !inviteQrUrl) {
-        setInviteQrUrl(await loadQr(packet));
-      }
-    }
-    setShowInviteQr((v) => !v);
-  };
+  const toggleInviteQr = () =>
+    runTogglePairingQr({
+      visible: showInviteQr,
+      setVisible: setShowInviteQr,
+      setDataUrl: setInviteQrUrl,
+      getPacket: () => connectionManager.refreshLocalPacket('offer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
-  const toggleResponseQr = async () => {
-    if (!showResponseQr) {
-      const packet = connectionManager.refreshLocalPacket('answer');
-      if (packet) {
-        setResponseQrUrl(await loadQr(packet));
-      }
-    }
-    setShowResponseQr((v) => !v);
-  };
+  const toggleResponseQr = () =>
+    runTogglePairingQr({
+      visible: showResponseQr,
+      setVisible: setShowResponseQr,
+      setDataUrl: setResponseQrUrl,
+      getPacket: () => connectionManager.refreshLocalPacket('answer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
   const startTransfer = async () => {
     if (fileRoleRef.current !== 'file-sender' || files.length === 0) return;

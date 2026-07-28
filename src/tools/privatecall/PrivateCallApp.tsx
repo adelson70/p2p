@@ -9,9 +9,9 @@ import { connectionSession } from '@/features/connection/connectionSession';
 import { copySignalingToClipboard } from '@/features/connection/signalingManual';
 import {
   parseSignalingInput,
-  encodeSignalingForQr,
-  renderQrDataUrl,
+  renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
 import type { CallRole } from '@/tools/privatecall/callConnectionManager';
 import { callConnectionManager } from '@/tools/privatecall/callConnectionManager';
@@ -167,9 +167,7 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
     void enterCall();
   }, [session.phase, step]);
 
-  const loadQr = async (packet: import('@/features/connection/signalingManual').SignalingPacket) => {
-    return renderQrDataUrl(encodeSignalingForQr(packet));
-  };
+  const loadQr = renderSignalingQrDataUrl;
 
   const beginCaller = async () => {
     setPairingError(null);
@@ -264,21 +262,25 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
     setTimeout(() => setResponseCopied(false), 2000);
   };
 
-  const toggleInviteQr = async () => {
-    if (!showInviteQr) {
-      const packet = callConnectionManager.refreshLocalPacket('offer');
-      if (packet && !inviteQrUrl) setInviteQrUrl(await loadQr(packet));
-    }
-    setShowInviteQr((v) => !v);
-  };
+  const toggleInviteQr = () =>
+    runTogglePairingQr({
+      visible: showInviteQr,
+      setVisible: setShowInviteQr,
+      setDataUrl: setInviteQrUrl,
+      getPacket: () => callConnectionManager.refreshLocalPacket('offer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
-  const toggleResponseQr = async () => {
-    if (!showResponseQr) {
-      const packet = callConnectionManager.refreshLocalPacket('answer');
-      if (packet) setResponseQrUrl(await loadQr(packet));
-    }
-    setShowResponseQr((v) => !v);
-  };
+  const toggleResponseQr = () =>
+    runTogglePairingQr({
+      visible: showResponseQr,
+      setVisible: setShowResponseQr,
+      setDataUrl: setResponseQrUrl,
+      getPacket: () => callConnectionManager.refreshLocalPacket('answer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
   const connectionLabel = (() => {
     if (callConnectionManager.isInCall()) return dict.privatecall.statusConnected;

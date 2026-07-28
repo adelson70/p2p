@@ -233,6 +233,7 @@
     "scanQr": "Scan QR or upload image",
     "showQr": "Show QR",
     "hideQr": "Hide QR",
+    "qrTooLarge": "This invite is too large for a QR code. Use “Copy invite” / “Copy response” instead.",
     "scanCamera": "Scan with camera",
     "scanCameraHint": "Point at the other device's QR code",
     "closeScanner": "Close",
@@ -266,6 +267,18 @@
     "statusConnected": "Connected — ready for files",
     "statusFailed": "Connection failed",
     "notConnectedSend": "Not connected yet. Complete pairing on both devices until status shows Connected."
+  },
+  "adblock": {
+    "badge": "Access blocked",
+    "title": "Turn off ad blocking for this site",
+    "body": "Brave Shields, AdGuard, or another blocker is interfering with Private Tools. WebRTC pairing and scripts can fail while filters stay on.",
+    "tipBrave": "Brave: tap the Shields icon in the address bar → turn Shields down for this site or add an exception.",
+    "tipAdguard": "AdGuard: open the extension → disable protection on this site or add it to the allowlist.",
+    "tipGeneric": "uBlock Origin and similar: open the extension and disable blocking on this domain, then recheck.",
+    "why": "We do not show ads. Blockers still hide probe elements and block scripts the app needs to run reliably.",
+    "recheck": "I turned it off — recheck",
+    "rechecking": "Checking…",
+    "signalCosmetic": "Cosmetic ad filter detected (bait element was hidden)."
   },
   "footer": {
     "privacy": "No accounts. No cloud. No tracking."

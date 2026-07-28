@@ -1,6 +1,7 @@
 import LZString from 'lz-string';
 import type { SignalingPacket } from './signalingManual';
 import { parseSignaling, serializeSignaling } from './signalingManual';
+import { qrShrinkVariants } from './signalingForQr';
 
 const { compressToEncodedURIComponent, decompressFromEncodedURIComponent } = LZString;
 
@@ -44,13 +45,57 @@ export function decodeSignalingFromQr(payload: string): SignalingPacket {
   return parseSignalingInput(payload);
 }
 
+export class QrPayloadTooLargeError extends Error {
+  constructor() {
+    super('QR payload too large');
+    this.name = 'QrPayloadTooLargeError';
+  }
+}
+
+function isQrCapacityError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /too big/i.test(message);
+}
+
+const QR_RENDER_OPTIONS = {
+  margin: 2,
+  width: 400,
+  errorCorrectionLevel: 'M' as const,
+  color: { dark: '#000000', light: '#ffffff' },
+} as const;
+
 export async function renderQrDataUrl(text: string): Promise<string> {
   const QRCode = await import('qrcode');
-  return QRCode.toDataURL(text, {
-    margin: 1,
-    width: 280,
-    color: { dark: '#fafafa', light: '#09090b' },
-  });
+  try {
+    return await QRCode.toDataURL(text, QR_RENDER_OPTIONS);
+  } catch (err) {
+    if (isQrCapacityError(err)) throw new QrPayloadTooLargeError();
+    throw err;
+  }
+}
+
+/** Renders a QR for signaling, shrinking ICE when the full payload does not fit. */
+export async function renderSignalingQrDataUrl(packet: SignalingPacket): Promise<string> {
+  const QRCode = await import('qrcode');
+  const payloads = [
+    encodeSignalingForQr(packet),
+    ...qrShrinkVariants(packet).map((variant) => encodeSignalingForQr(variant)),
+  ];
+  const unique = [...new Set(payloads)];
+
+  let lastCapacityError: QrPayloadTooLargeError | undefined;
+  for (const text of unique) {
+    try {
+      return await QRCode.toDataURL(text, QR_RENDER_OPTIONS);
+    } catch (err) {
+      if (isQrCapacityError(err)) {
+        lastCapacityError = new QrPayloadTooLargeError();
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastCapacityError ?? new QrPayloadTooLargeError();
 }
 
 export async function scanQrFromImageFile(file: File): Promise<string> {

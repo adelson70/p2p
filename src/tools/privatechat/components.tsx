@@ -191,23 +191,6 @@ export function ChatComposer({
   const fileRef = useRef<HTMLInputElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [keyboardInset, setKeyboardInset] = useState(0);
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => {
-      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      setKeyboardInset(inset);
-    };
-    update();
-    vv.addEventListener('resize', update);
-    vv.addEventListener('scroll', update);
-    return () => {
-      vv.removeEventListener('resize', update);
-      vv.removeEventListener('scroll', update);
-    };
-  }, []);
 
   const submit = () => {
     const el = inputRef.current;
@@ -220,10 +203,7 @@ export function ChatComposer({
   };
 
   return (
-    <div
-      className="shrink-0 border-t border-border bg-[#202c33] px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6"
-      style={keyboardInset > 0 ? { paddingBottom: keyboardInset + 12 } : undefined}
-    >
+    <div className="shrink-0 border-t border-border bg-[#202c33] px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6">
       <div className="flex w-full items-end gap-2">
         <button
           type="button"

@@ -9,9 +9,9 @@ import { connectionSession } from '@/features/connection/connectionSession';
 import { copySignalingToClipboard } from '@/features/connection/signalingManual';
 import {
   parseSignalingInput,
-  encodeSignalingForQr,
-  renderQrDataUrl,
+  renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import type { ChatRole } from '@/tools/privatechat/chatConnectionManager';
 import { chatConnectionManager } from '@/tools/privatechat/chatConnectionManager';
 import { ChatSession, type ChatMessageItem } from '@/tools/privatechat/ChatSession';
@@ -112,9 +112,7 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
     }
   }, [session.phase, session.error, step, resetAfterChat]);
 
-  const loadQr = async (packet: import('@/features/connection/signalingManual').SignalingPacket) => {
-    return renderQrDataUrl(encodeSignalingForQr(packet));
-  };
+  const loadQr = renderSignalingQrDataUrl;
 
   const beginHost = async () => {
     setPairingError(null);
@@ -205,21 +203,25 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
     setTimeout(() => setResponseCopied(false), 2000);
   };
 
-  const toggleInviteQr = async () => {
-    if (!showInviteQr) {
-      const packet = chatConnectionManager.refreshLocalPacket('offer');
-      if (packet && !inviteQrUrl) setInviteQrUrl(await loadQr(packet));
-    }
-    setShowInviteQr((v) => !v);
-  };
+  const toggleInviteQr = () =>
+    runTogglePairingQr({
+      visible: showInviteQr,
+      setVisible: setShowInviteQr,
+      setDataUrl: setInviteQrUrl,
+      getPacket: () => chatConnectionManager.refreshLocalPacket('offer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
-  const toggleResponseQr = async () => {
-    if (!showResponseQr) {
-      const packet = chatConnectionManager.refreshLocalPacket('answer');
-      if (packet) setResponseQrUrl(await loadQr(packet));
-    }
-    setShowResponseQr((v) => !v);
-  };
+  const toggleResponseQr = () =>
+    runTogglePairingQr({
+      visible: showResponseQr,
+      setVisible: setShowResponseQr,
+      setDataUrl: setResponseQrUrl,
+      getPacket: () => chatConnectionManager.refreshLocalPacket('answer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
   const connectionLabel = (() => {
     if (chatConnectionManager.isReady()) return dict.privatechat.statusConnected;

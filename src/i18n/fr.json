@@ -233,6 +233,7 @@
     "scanQr": "Scannez QR ou téléchargez l'image",
     "showQr": " afficher qr",
     "hideQr": "Masquer QR",
+    "qrTooLarge": "L’invitation est trop volumineuse pour un QR. Utilisez « Copier l’invitation » / « Copier la réponse ».",
     "scanCamera": "SCANNEZ AVEC VOTRE SMARTPHONE",
     "scanCameraHint": "Pointez sur le code QR de l'autre appareil",
     "closeScanner": "Fermer",
@@ -266,6 +267,18 @@
     "statusConnected": "Connecté — prêt pour les fichiers",
     "statusFailed": "La connexion a échoué",
     "notConnectedSend": "Pas encore connecté. Effectuez le jumelage sur les deux appareils jusqu'à ce que l'état indique Connecté."
+  },
+  "adblock": {
+    "badge": "Accès bloqué",
+    "title": "Désactivez le blocage des publicités sur ce site",
+    "body": "Brave Shields, AdGuard ou un autre bloqueur perturbe Private Tools. L’appariement WebRTC et les scripts peuvent échouer tant que les filtres restent actifs.",
+    "tipBrave": "Brave : icône bouclier dans la barre d’adresse → baissez Shields pour ce site ou ajoutez une exception.",
+    "tipAdguard": "AdGuard : ouvrez l’extension → désactivez la protection sur ce site ou ajoutez-le à la liste blanche.",
+    "tipGeneric": "uBlock Origin et similaires : désactivez le blocage sur ce domaine, puis revérifiez.",
+    "why": "Nous n’affichons pas de publicités. Les bloqueurs masquent quand même des leurres et bloquent des scripts nécessaires.",
+    "recheck": "C’est désactivé — revérifier",
+    "rechecking": "Vérification…",
+    "signalCosmetic": "Filtre cosmétique détecté (élément leurre masqué)."
   },
   "footer": {
     "privacy": "Pas de comptes. Pas de cloud. Pas de suivi."

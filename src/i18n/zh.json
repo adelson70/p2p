@@ -233,6 +233,7 @@
     "scanQr": "扫描二维码或上传图片",
     "showQr": "显示二维码",
     "hideQr": "隐藏二维码",
+    "qrTooLarge": "邀请数据过大，无法生成二维码。请使用“复制邀请”/“复制回复”。",
     "scanCamera": "使用相机扫描",
     "scanCameraHint": "指向另一台设备的二维码",
     "closeScanner": "关闭",
@@ -266,6 +267,18 @@
     "statusConnected": "已连接—文件准备就绪",
     "statusFailed": "连接失败",
     "notConnectedSend": "尚未连接。在两台设备上完成配对，直到状态显示为已连接。"
+  },
+  "adblock": {
+    "badge": "访问已阻止",
+    "title": "请在此站点关闭广告拦截",
+    "body": "Brave Shields、AdGuard 或其他拦截器正在干扰 Private Tools。过滤器开启时 WebRTC 配对和脚本可能失败。",
+    "tipBrave": "Brave：地址栏盾牌图标 → 为本站降低 Shields 或添加例外。",
+    "tipAdguard": "AdGuard：打开扩展 → 在本站关闭保护或加入白名单。",
+    "tipGeneric": "uBlock Origin 等：在本域名关闭拦截后重新检测。",
+    "why": "我们不展示广告。拦截器仍会隐藏探测元素并阻止应用所需的脚本。",
+    "recheck": "已关闭 — 重新检测",
+    "rechecking": "检测中…",
+    "signalCosmetic": "检测到 cosmetic 过滤器（诱饵元素被隐藏）。"
   },
   "footer": {
     "privacy": "无账户、无云、无追踪。"

@@ -26,6 +26,16 @@ body {
   min-height: 100dvh;
 }
 
+html.pt-adblock body > :not([data-pt-adblock-overlay]) {
+  pointer-events: none;
+  user-select: none;
+  filter: blur(8px) brightness(0.35);
+}
+
+html.pt-adblock {
+  overflow: hidden;
+}
+
 /* Mobile main/footer clearance above bottom nav */
 @media (max-width: 767px) {
   .app-main--padded {

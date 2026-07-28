@@ -2,6 +2,7 @@
 import '@/styles/global.css';
 import type { Locale } from '@/i18n/config';
 import { alternateLocales, localeDefinitions, localePath } from '@/i18n/config';
+import { AdblockGate } from '@/components/AdblockGate.tsx';
 
 interface Props {
   locale: Locale;
@@ -19,13 +20,14 @@ const htmlDir = localeDefinitions[locale].direction;
 const ogLocale =
   locale === 'en' ? 'en_US' : locale === 'pt' ? 'pt_BR' : locale === 'zh' ? 'zh_CN' : `${locale}_${locale.toUpperCase()}`;
 const defaultCanonical = `${site}${localePath('en', canonicalPath || '/')}`;
+const adblockGateEnabled = !import.meta.env.DEV;
 ---
 
 <!doctype html>
 <html lang={htmlLang} dir={htmlDir}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     {dictDesc ? <meta name="description" content={dictDesc} /> : null}
@@ -91,6 +93,51 @@ const defaultCanonical = `${site}${localePath('en', canonicalPath || '/')}`;
     }
   </head>
   <body>
+    {
+      adblockGateEnabled ? (
+        <>
+          <script is:inline>
+            {`(function () {
+  function cosmeticBlocked() {
+    var el = document.createElement('div');
+    el.innerHTML = '&nbsp;';
+    el.className =
+      'pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links advertisement sponsored-content adsbox ad-placement';
+    el.style.cssText =
+      'position:fixed!important;left:-10000px!important;top:-10000px!important;width:1px!important;height:1px!important;';
+    document.documentElement.appendChild(el);
+    var cs = window.getComputedStyle(el);
+    var blocked =
+      !el.offsetParent ||
+      el.offsetHeight === 0 ||
+      el.offsetWidth === 0 ||
+      cs.display === 'none' ||
+      cs.visibility === 'hidden' ||
+      cs.opacity === '0';
+    el.remove();
+    return blocked;
+  }
+  function apply(blocked) {
+    window.__PT_ADBLOCK = blocked;
+    if (blocked) {
+      document.documentElement.classList.add('pt-adblock');
+      document.documentElement.style.overflow = 'hidden';
+    }
+  }
+  function run() {
+    apply(cosmeticBlocked());
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();`}
+          </script>
+          <AdblockGate client:load locale={locale} />
+        </>
+      ) : null
+    }
     <slot />
   </body>
 </html>

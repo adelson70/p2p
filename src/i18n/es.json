@@ -233,6 +233,7 @@
     "scanQr": "Escanear QR o subir imagen",
     "showQr": "Mostrar QR",
     "hideQr": "Ocultar QR",
+    "qrTooLarge": "La invitación es demasiado grande para un código QR. Usa “Copiar invitación” / “Copiar respuesta”.",
     "scanCamera": "Leer con cámara",
     "scanCameraHint": "Apunta al QR del otro dispositivo",
     "closeScanner": "Cerrar",
@@ -266,6 +267,18 @@
     "statusConnected": "Conectado — pronto para archivos",
     "statusFailed": "Conexión fallida",
     "notConnectedSend": "Ainda não conectado. Termine o emparejamiento nos dois dispositivos até aparecer Conectado."
+  },
+  "adblock": {
+    "badge": "Acceso bloqueado",
+    "title": "Desactiva el bloqueo de anuncios en este sitio",
+    "body": "Brave Shields, AdGuard u otro bloqueador está interfiriendo con Private Tools. El emparejamiento WebRTC y los scripts pueden fallar con los filtros activos.",
+    "tipBrave": "Brave: icono del escudo en la barra → baja Shields en este sitio o añade una excepción.",
+    "tipAdguard": "AdGuard: abre la extensión → desactiva la protección en este sitio o añádelo a la lista blanca.",
+    "tipGeneric": "uBlock Origin y similares: abre la extensión y desactiva el bloqueo en este dominio, luego vuelve a comprobar.",
+    "why": "No mostramos anuncios. Los bloqueadores ocultan señuelos y bloquean scripts que la app necesita.",
+    "recheck": "Ya lo desactivé — comprobar de nuevo",
+    "rechecking": "Comprobando…",
+    "signalCosmetic": "Filtro cosmético detectado (elemento señuelo oculto)."
   },
   "footer": {
     "privacy": "Sin cuentas. Sin nube. Sin rastreo."

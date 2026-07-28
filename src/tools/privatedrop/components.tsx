@@ -3,6 +3,7 @@ import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { getQrScannerVideoStream } from '@/features/connection/pairingCamera';
 
 interface DropZoneProps {
   label: string;
@@ -155,6 +156,7 @@ export function ShareSignalingBlock({
   copyLabel,
   qrDataUrl,
   qrVisible,
+  qrLoading,
   onToggleQr,
   onCopy,
   copied,
@@ -164,11 +166,26 @@ export function ShareSignalingBlock({
   copyLabel: string;
   qrDataUrl?: string;
   qrVisible: boolean;
-  onToggleQr: () => void;
+  qrLoading?: boolean;
+  onToggleQr: () => void | Promise<void>;
   onCopy: () => void;
   copied: boolean;
 }) {
   const dict = getDictionary(locale);
+  const [busy, setBusy] = useState(false);
+
+  const handleToggleQr = async () => {
+    if (busy || qrLoading) return;
+    setBusy(true);
+    try {
+      await onToggleQr();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const showQrBlock = qrVisible && (qrDataUrl || busy || qrLoading);
+
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface-raised/50 p-4">
       {roomCode ? (
@@ -181,19 +198,23 @@ export function ShareSignalingBlock({
         <Button size="sm" variant="secondary" onClick={onCopy}>
           {copied ? dict.privatedrop.copied : copyLabel}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onToggleQr}>
+        <Button size="sm" variant="ghost" onClick={() => void handleToggleQr()} disabled={busy || qrLoading}>
           {qrVisible ? dict.privatedrop.hideQr : dict.privatedrop.showQr}
         </Button>
       </div>
-      {qrVisible && qrDataUrl ? (
+      {showQrBlock ? (
         <div className="flex justify-center pt-1">
-          <img
-            src={qrDataUrl}
-            alt=""
-            className="rounded-lg border border-border"
-            width={240}
-            height={240}
-          />
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt=""
+              className="max-w-full rounded-lg border border-border bg-white p-2"
+              width={280}
+              height={280}
+            />
+          ) : (
+            <p className="py-8 text-sm text-muted">{dict.privatedrop.showQr}…</p>
+          )}
         </div>
       ) : null}
     </div>
@@ -260,7 +281,12 @@ export function QrCameraScanner({
 }) {
   const dict = getDictionary(locale);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const onResultRef = useRef(onResult);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
 
   useEffect(() => {
     let stream: MediaStream | undefined;
@@ -273,10 +299,7 @@ export function QrCameraScanner({
         return;
       }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-          audio: false,
-        });
+        stream = await getQrScannerVideoStream();
       } catch {
         setError(dict.privatedrop.cameraPermission);
         return;
@@ -293,7 +316,7 @@ export function QrCameraScanner({
           const codes = await detector.detect(videoRef.current);
           const value = codes[0]?.rawValue;
           if (value) {
-            onResult(value);
+            onResultRef.current(value);
             return;
           }
         } catch {
@@ -311,11 +334,11 @@ export function QrCameraScanner({
       cancelAnimationFrame(raf);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [dict.privatedrop.cameraPermission, dict.privatedrop.scanNotSupported, onResult]);
+  }, [dict.privatedrop.cameraPermission, dict.privatedrop.scanNotSupported]);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
       role="dialog"
       aria-modal
       aria-label={dict.privatedrop.scanCamera}
@@ -325,7 +348,13 @@ export function QrCameraScanner({
         {error ? (
           <p className="text-center text-sm text-red-400">{error}</p>
         ) : (
-          <video ref={videoRef} className="aspect-square w-full rounded-lg bg-black object-cover" muted playsInline />
+          <video
+            ref={videoRef}
+            className="aspect-square w-full rounded-lg bg-black object-contain"
+            muted
+            playsInline
+            autoPlay
+          />
         )}
         <Button size="sm" variant="secondary" className="w-full" onClick={onClose}>
           {dict.privatedrop.closeScanner}

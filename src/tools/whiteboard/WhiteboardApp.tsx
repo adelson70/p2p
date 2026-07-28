@@ -9,9 +9,9 @@ import { connectionSession } from '@/features/connection/connectionSession';
 import { copySignalingToClipboard } from '@/features/connection/signalingManual';
 import {
   parseSignalingInput,
-  encodeSignalingForQr,
-  renderQrDataUrl,
+  renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import type { BoardRole } from '@/tools/whiteboard/whiteboardConnectionManager';
 import { whiteboardConnectionManager } from '@/tools/whiteboard/whiteboardConnectionManager';
 import { WhiteboardSession, type BoardStroke } from '@/tools/whiteboard/WhiteboardSession';
@@ -111,9 +111,7 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
     }
   }, [session.phase, session.error, step, resetAfterBoard]);
 
-  const loadQr = async (packet: import('@/features/connection/signalingManual').SignalingPacket) => {
-    return renderQrDataUrl(encodeSignalingForQr(packet));
-  };
+  const loadQr = renderSignalingQrDataUrl;
 
   const beginHost = async () => {
     setPairingError(null);
@@ -204,21 +202,25 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
     setTimeout(() => setResponseCopied(false), 2000);
   };
 
-  const toggleInviteQr = async () => {
-    if (!showInviteQr) {
-      const packet = whiteboardConnectionManager.refreshLocalPacket('offer');
-      if (packet && !inviteQrUrl) setInviteQrUrl(await loadQr(packet));
-    }
-    setShowInviteQr((v) => !v);
-  };
+  const toggleInviteQr = () =>
+    runTogglePairingQr({
+      visible: showInviteQr,
+      setVisible: setShowInviteQr,
+      setDataUrl: setInviteQrUrl,
+      getPacket: () => whiteboardConnectionManager.refreshLocalPacket('offer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
-  const toggleResponseQr = async () => {
-    if (!showResponseQr) {
-      const packet = whiteboardConnectionManager.refreshLocalPacket('answer');
-      if (packet) setResponseQrUrl(await loadQr(packet));
-    }
-    setShowResponseQr((v) => !v);
-  };
+  const toggleResponseQr = () =>
+    runTogglePairingQr({
+      visible: showResponseQr,
+      setVisible: setShowResponseQr,
+      setDataUrl: setResponseQrUrl,
+      getPacket: () => whiteboardConnectionManager.refreshLocalPacket('answer'),
+      loadQr,
+      onQrTooLarge: () => setPairingError(dict.privatedrop.qrTooLarge),
+    });
 
   const connectionLabel = (() => {
     if (whiteboardConnectionManager.isReady()) return dict.whiteboard.statusConnected;
