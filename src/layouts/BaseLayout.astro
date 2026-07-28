@@ -27,7 +27,7 @@ const adblockGateEnabled = !import.meta.env.DEV;
 <html lang={htmlLang} dir={htmlDir}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     {dictDesc ? <meta name="description" content={dictDesc} /> : null}
@@ -69,9 +69,33 @@ const adblockGateEnabled = !import.meta.env.DEV;
     {dictDesc ? <meta name="twitter:description" content={dictDesc} /> : null}
     <meta name="theme-color" content="#09090b" />
     <slot name="head" />
-    <script>
-      import { initAppViewportHeight } from '@/lib/syncAppViewportHeight';
-      initAppViewportHeight();
+    <script is:inline>
+      {`(function () {
+  function recover() {
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    var root = document.documentElement;
+    if (!root.classList.contains('pt-adblock')) {
+      root.style.removeProperty('--app-vh');
+      root.style.height = '';
+      root.style.overflow = '';
+      document.body.style.height = '';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      recover();
+      requestAnimationFrame(recover);
+      setTimeout(recover, 100);
+    }
+  });
+  window.addEventListener('pageshow', recover);
+  window.addEventListener('focus', recover);
+})();`}
     </script>
     <script is:inline>
       (function () {

@@ -26,26 +26,48 @@ body {
   min-height: 100dvh;
 }
 
-/* Mobile: shell fills viewport; only .app-shell-scroll scrolls (nav/header stay put) */
+/*
+ * Mobile (non-immersive): native document scroll only — no fixed-height shell.
+ * Fixed-height + overflow:hidden shells break after keyboard / app switch on iOS/Android.
+ */
 @media (max-width: 767px) {
   html:not([data-immersive-shell]) .app-shell {
-    height: var(--app-vh, 100dvh);
-    max-height: var(--app-vh, 100dvh);
-    overflow: hidden;
+    min-height: 100dvh;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
   }
 
-  html:not([data-immersive-shell]) .app-shell-scroll {
-    flex: 1 1 0%;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
+  html:not([data-immersive-shell]) .app-shell-scroll,
+  html:not([data-immersive-shell]) .app-main,
+  html:not([data-immersive-shell]) .fill-main-host--scroll {
+    overflow: visible;
+    flex: 1 1 auto;
+    min-height: auto;
   }
 
-  html:not([data-immersive-shell]) .app-mobile-header,
-  html:not([data-immersive-shell]) .app-mobile-bottom-nav {
+  html:not([data-immersive-shell]) .app-mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
     flex-shrink: 0;
+  }
+
+  html:not([data-immersive-shell]) .app-mobile-bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    flex-shrink: 0;
+  }
+
+  html[data-pt-overlay] .app-shell,
+  html[data-pt-overlay] .app-shell-scroll {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 }
 
@@ -66,7 +88,6 @@ html.pt-adblock {
   overflow: hidden;
 }
 
-/* Mobile main/footer: small bottom pad only (nav is in shell chrome, not overlay) */
 @media (max-width: 767px) {
   .app-main--padded {
     padding-bottom: 1.5rem;
@@ -83,16 +104,46 @@ html.pt-adblock {
   min-height: 0;
 }
 
-/* Immersive tool session: lock page scroll, full viewport */
+/* Immersive session: fixed shell fills screen; bottom nav stays on mobile */
 html[data-immersive-shell] body {
-  height: var(--app-vh, 100dvh);
   overflow: hidden;
 }
 
-html[data-immersive-shell] .app-shell--fill {
-  height: var(--app-vh, 100dvh);
-  max-height: var(--app-vh, 100dvh);
-  overflow: hidden;
+@media (max-width: 767px) {
+  html[data-immersive-shell] .app-shell--fill {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow: hidden;
+    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
+  }
+
+  html[data-immersive-shell] .app-shell-scroll {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html[data-immersive-shell] .app-mobile-bottom-nav {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  html[data-immersive-shell] body {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  html[data-immersive-shell] .app-shell--fill {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
 }
 
 html[data-immersive-shell] .app-shell-scroll {
@@ -105,8 +156,7 @@ html[data-immersive-shell] .app-shell--fill .app-main {
   overflow: hidden;
 }
 
-html[data-immersive-shell] .app-mobile-header,
-html[data-immersive-shell] .app-mobile-bottom-nav {
+html[data-immersive-shell] .app-mobile-header {
   display: none;
 }
 
@@ -139,7 +189,7 @@ html:not([data-immersive-shell]) .app-shell--fill .app-main {
 html:not([data-immersive-shell]) .fill-main-host--scroll {
   overflow: visible;
   flex: 1 1 auto;
-  min-height: min-content;
+  min-height: auto;
 }
 
 html[data-immersive-shell] .fill-main-host {
@@ -160,18 +210,6 @@ html[data-immersive-shell] .fill-main-host > astro-island > * {
   flex: 1 1 0%;
   flex-direction: column;
   height: 100%;
-}
-
-@media (max-width: 767px) {
-  html:not([data-immersive-shell]) .app-shell--fill .app-shell-scroll {
-    display: flex;
-    flex-direction: column;
-  }
-
-  html:not([data-immersive-shell]) .app-shell--fill .app-main {
-    flex: 1 1 auto;
-    min-height: min-content;
-  }
 }
 
 *:focus-visible {

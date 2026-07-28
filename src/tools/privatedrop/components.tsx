@@ -5,6 +5,7 @@ import { getDictionary } from '@/i18n';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { getQrScannerVideoStream } from '@/features/connection/pairingCamera';
+import { useOverlayLifecycle } from '@/hooks/useOverlayLifecycle';
 
 interface DropZoneProps {
   label: string;
@@ -165,6 +166,7 @@ function PairingQrModal({
   onClose: () => void;
 }) {
   const dict = getDictionary(locale);
+  useOverlayLifecycle(true);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -340,6 +342,8 @@ export function QrCameraScanner({
   const videoRef = useRef<HTMLVideoElement>(null);
   const onResultRef = useRef(onResult);
   const [error, setError] = useState<string | null>(null);
+
+  useOverlayLifecycle(true);
 
   useEffect(() => {
     onResultRef.current = onResult;

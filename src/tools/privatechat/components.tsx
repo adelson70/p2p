@@ -274,6 +274,11 @@ export function ChatComposer({
               submit();
             }
           }}
+          onFocus={(e) => {
+            requestAnimationFrame(() => {
+              e.currentTarget.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            });
+          }}
         />
         <Button
           size="sm"

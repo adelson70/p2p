@@ -4,6 +4,7 @@ import { localePath } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { MobileLayoutRecovery } from '@/components/MobileLayoutRecovery';
 
 interface Props {
   locale: Locale;
@@ -34,6 +35,7 @@ const navItems = [
   ]}
   data-fill-main={fillMain || undefined}
 >
+  <MobileLayoutRecovery client:load />
   <header
     class="app-mobile-header z-30 flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-4 py-3 md:hidden"
   >
