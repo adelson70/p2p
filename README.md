@@ -63,11 +63,12 @@ npm run preview   # wrangler dev (run after build; astro preview is not used wit
 1. Connect the repository to Cloudflare Pages.
 2. Build command: `npm run build`
 3. Build output directory: `dist/client` (static HTML and assets; not the `dist/` root alone)
-4. Environment variable (recommended in CI): `SITE_URL=https://p2ptools.abjr.dev` for canonical URLs, sitemap, `robots.txt`, `llms.txt`, and RSS. Local builds fall back to the same URL if unset.
+
+Canonical URL is hardcoded in `src/site.ts` (`https://p2ptools.abjr.dev`) for sitemap, `robots.txt`, `llms.txt`, and RSS.
 
 ### SEO & discovery
 
-At build time (uses `SITE_URL` / `site` in `astro.config.mjs`):
+At build time (uses `site` in `astro.config.mjs` from `src/site.ts`):
 
 | URL | Purpose |
 |-----|---------|

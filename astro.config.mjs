@@ -8,6 +8,7 @@ import mdx from '@astrojs/mdx';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE } from './src/site.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,7 +25,7 @@ const reactJsx = /** @type {const} */ ({
 
 // https://astro.build/config
 export default defineConfig({
-  site: process.env.SITE_URL ?? 'https://p2ptools.abjr.dev',
+  site: SITE,
   output: 'static',
   integrations: [
     react(),
