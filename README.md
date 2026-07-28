@@ -58,11 +58,14 @@ npm run preview   # wrangler dev (run after build; astro preview is not used wit
 - **Both peers must be online** during the transfer.
 - **WebRTC tools need network**; the PWA offline cache covers the hub shell and static assets.
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare Worker `p2p`)
 
-1. Connect the repository to Cloudflare Pages.
-2. Build command: `npm run build`
-3. Build output directory: `dist/client` (static HTML and assets; not the `dist/` root alone)
+Git-connected Worker build (as in the dashboard):
+
+1. Build command: `npm run build`
+2. Deploy command: `npx wrangler deploy`
+
+Worker name is **`p2p`** (`wrangler.jsonc`). Default URL: `https://p2p.<account>.workers.dev`. Custom host `p2ptools.abjr.dev` is declared in `wrangler.jsonc` `routes` and applied on deploy (zone `abjr.dev` must be on the same Cloudflare account).
 
 Canonical URL is hardcoded in `src/site.ts` (`https://p2ptools.abjr.dev`) for sitemap, `robots.txt`, `llms.txt`, and RSS.
 
