@@ -12,6 +12,7 @@
   --color-foreground: var(--pt-foreground);
   --color-accent: var(--pt-accent);
   --color-accent-muted: var(--pt-accent-muted);
+  --spacing-mobile-nav: 4rem;
 }
 
 html {
@@ -25,9 +26,49 @@ body {
   min-height: 100dvh;
 }
 
-/* Full-height tool layouts (Private Chat, Whiteboard): lock page scroll, stretch islands */
-html:has([data-fill-main]) body {
+/* Mobile main/footer clearance above bottom nav */
+@media (max-width: 767px) {
+  .app-main--padded {
+    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px) + 1.5rem);
+  }
+
+  .app-footer {
+    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.app-shell--fill .app-main {
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+.app-shell--fill .fill-main-host--scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+}
+
+/* Immersive tool session: lock page scroll, full viewport */
+html[data-immersive-shell] body {
   height: 100dvh;
+  overflow: hidden;
+}
+
+html[data-immersive-shell] .app-shell--fill {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+html[data-immersive-shell] .app-shell--fill .app-main {
+  overflow: hidden;
+}
+
+html[data-immersive-shell] .app-mobile-header,
+html[data-immersive-shell] .app-mobile-bottom-nav {
+  display: none;
+}
+
+html[data-immersive-shell] .fill-main-host--scroll {
   overflow: hidden;
 }
 
@@ -36,10 +77,33 @@ html:has([data-fill-main]) body {
   min-height: 0;
   flex: 1 1 0%;
   flex-direction: column;
+}
+
+.fill-main-host--scroll {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+html:not([data-immersive-shell]) .app-shell--fill {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+html:not([data-immersive-shell]) .app-shell--fill .app-main {
+  overflow: visible;
+}
+
+html:not([data-immersive-shell]) .fill-main-host--scroll {
+  overflow: visible;
+  flex: 1 1 auto;
+}
+
+html[data-immersive-shell] .fill-main-host {
   height: 100%;
 }
 
-.fill-main-host > astro-island {
+html[data-immersive-shell] .fill-main-host > astro-island {
   display: flex;
   min-height: 0;
   flex: 1 1 0%;
@@ -47,12 +111,18 @@ html:has([data-fill-main]) body {
   height: 100%;
 }
 
-.fill-main-host > astro-island > * {
+html[data-immersive-shell] .fill-main-host > astro-island > * {
   display: flex;
   min-height: 0;
   flex: 1 1 0%;
   flex-direction: column;
   height: 100%;
+}
+
+@media (max-width: 767px) {
+  .app-shell--fill .fill-main-host--scroll:not(:has(.fill-main-immersive)) {
+    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 *:focus-visible {
@@ -88,4 +158,13 @@ html:has([data-fill-main]) body {
 
 .chat-typing-dot:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

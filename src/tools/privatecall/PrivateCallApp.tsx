@@ -21,12 +21,23 @@ import {
   ShareSignalingBlock,
   SignalingCodeField,
 } from '@/tools/privatedrop/components';
+import { useImmersiveShell } from '@/hooks/useImmersiveShell';
 
 type Step = 'role' | 'pairing' | 'call';
 
 type PairingPhase = 'idle' | 'callee-has-response';
 
-function VideoPane({ stream, label, mirror }: { stream: MediaStream | null; label: string; mirror?: boolean }) {
+function VideoPane({
+  stream,
+  label,
+  mirror,
+  className = '',
+}: {
+  stream: MediaStream | null;
+  label: string;
+  mirror?: boolean;
+  className?: string;
+}) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -40,7 +51,9 @@ function VideoPane({ stream, label, mirror }: { stream: MediaStream | null; labe
   }, [stream]);
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-xl border border-border bg-black">
+    <div
+      className={`relative aspect-video overflow-hidden rounded-xl border border-border bg-black ${className}`}
+    >
       <video
         ref={ref}
         className={`h-full w-full object-cover ${mirror ? 'scale-x-[-1]' : ''}`}
@@ -294,15 +307,59 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
 
   const isCaller = callRole === 'caller';
 
+  useImmersiveShell(step === 'call');
+
+  if (step === 'call') {
+    const showLocalVideo = videoCall && callConnectionManager.hasVideoTrack();
+    return (
+      <div className="fill-main-immersive flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-black">
+        <div className="relative min-h-0 flex-1">
+          <VideoPane
+            stream={remoteStream}
+            label={dict.privatecall.remoteVideo}
+            className="absolute inset-0 aspect-auto h-full w-full rounded-none border-0"
+          />
+          {showLocalVideo ? (
+            <div className="absolute bottom-4 right-3 z-10 w-28 overflow-hidden rounded-lg border border-white/20 shadow-lg sm:bottom-6 sm:w-36">
+              <VideoPane
+                stream={localStream}
+                label={dict.privatecall.localVideo}
+                mirror
+                className="aspect-video rounded-none border-0"
+              />
+            </div>
+          ) : (
+            <p className="absolute bottom-4 left-0 right-0 text-center text-sm text-white/80">
+              {dict.privatecall.audioOnly}
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-wrap justify-center gap-2 border-t border-white/10 bg-[#202c33] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <Button size="sm" variant="secondary" onClick={toggleMic}>
+            {micOn ? dict.privatecall.mute : dict.privatecall.unmute}
+          </Button>
+          {callConnectionManager.hasVideoTrack() ? (
+            <Button size="sm" variant="secondary" onClick={toggleCam}>
+              {camOn ? dict.privatecall.cameraOff : dict.privatecall.cameraOn}
+            </Button>
+          ) : null}
+          <Button size="sm" variant="danger" onClick={hangUp}>
+            {dict.privatecall.hangUp}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center px-1 sm:max-w-lg">
+    <div className="mx-auto flex w-full min-h-0 flex-1 flex-col items-center px-4 py-6 sm:max-w-lg md:max-w-md">
       <PageHeader
         className="text-center"
         title={dict.privatecall.title}
         subtitle={dict.privatecall.subtitle}
       />
 
-      {(step === 'pairing' || step === 'call') && (
+      {(step === 'pairing') && (
         <div className="mb-6 flex justify-center">
           <ConnectionBadge
             label={dict.privatecall.connectionStatus}
@@ -391,29 +448,6 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
         </Card>
       )}
 
-      {step === 'call' && (
-        <div className="w-full space-y-4">
-          <VideoPane stream={remoteStream} label={dict.privatecall.remoteVideo} />
-          {videoCall && callConnectionManager.hasVideoTrack() ? (
-            <VideoPane stream={localStream} label={dict.privatecall.localVideo} mirror />
-          ) : (
-            <p className="text-center text-sm text-muted">{dict.privatecall.audioOnly}</p>
-          )}
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button size="sm" variant="secondary" onClick={toggleMic}>
-              {micOn ? dict.privatecall.mute : dict.privatecall.unmute}
-            </Button>
-            {callConnectionManager.hasVideoTrack() ? (
-              <Button size="sm" variant="secondary" onClick={toggleCam}>
-                {camOn ? dict.privatecall.cameraOff : dict.privatecall.cameraOn}
-              </Button>
-            ) : null}
-            <Button size="sm" variant="danger" onClick={hangUp}>
-              {dict.privatecall.hangUp}
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

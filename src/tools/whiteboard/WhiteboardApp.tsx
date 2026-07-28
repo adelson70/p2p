@@ -23,6 +23,7 @@ import {
   ShareSignalingBlock,
   SignalingCodeField,
 } from '@/tools/privatedrop/components';
+import { useImmersiveShell } from '@/hooks/useImmersiveShell';
 
 type Step = 'role' | 'pairing' | 'board';
 
@@ -245,10 +246,12 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
   const ready = whiteboardConnectionManager.isReady();
   const isHost = boardRole === 'host';
 
+  useImmersiveShell(step === 'board');
+
   if (step === 'board') {
     const bs = boardSessionRef.current;
     return (
-      <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="fill-main-immersive flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
         <BoardHeader
           locale={locale}
           roomCode={session.roomCode}
@@ -283,7 +286,7 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 py-6 sm:max-w-lg md:py-10">
+    <div className="mx-auto flex w-full min-h-0 flex-1 flex-col items-center px-4 py-6 sm:max-w-lg md:max-w-md md:py-10">
       <PageHeader
         className="text-center"
         title={dict.whiteboard.title}

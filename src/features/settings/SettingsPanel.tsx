@@ -120,7 +120,8 @@ export function SettingsPanel({ locale }: { locale: Locale }) {
         </SettingRow>
 
         <SettingRow label={dict.settings.theme}>
-          <SegmentedButtons
+          <div className="w-full max-w-full overflow-x-auto">
+            <SegmentedButtons
             value={theme}
             options={[
               { value: 'system', label: dict.settings.themeSystem },
@@ -129,6 +130,7 @@ export function SettingsPanel({ locale }: { locale: Locale }) {
             ]}
             onChange={onTheme}
           />
+          </div>
         </SettingRow>
       </Card>
 

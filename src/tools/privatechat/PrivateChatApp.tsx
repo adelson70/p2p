@@ -16,6 +16,7 @@ import type { ChatRole } from '@/tools/privatechat/chatConnectionManager';
 import { chatConnectionManager } from '@/tools/privatechat/chatConnectionManager';
 import { ChatSession, type ChatMessageItem } from '@/tools/privatechat/ChatSession';
 import { ChatComposer, MessageList, ChatThreadHeader } from '@/tools/privatechat/components';
+import { useImmersiveShell } from '@/hooks/useImmersiveShell';
 import {
   ConnectionBadge,
   PairingStep,
@@ -261,9 +262,11 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
 
   const isHost = chatRole === 'host';
 
+  useImmersiveShell(step === 'chat');
+
   if (step === 'chat') {
     return (
-      <div className="flex h-full min-h-0 w-full flex-1 basis-0 flex-col overflow-hidden">
+      <div className="fill-main-immersive flex h-full min-h-0 w-full flex-1 basis-0 flex-col overflow-hidden">
         <ChatThreadHeader
           locale={locale}
           roomCode={session.roomCode}
@@ -294,7 +297,7 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 py-6 sm:max-w-lg md:py-10">
+    <div className="mx-auto flex w-full min-h-0 flex-1 flex-col items-center px-4 py-6 sm:max-w-lg md:max-w-md md:py-10">
       <PageHeader
         className="text-center"
         title={dict.privatechat.title}

@@ -11,6 +11,6 @@ const locale = resolvePageLocale(Astro.params.locale);
 if (!locale) return Astro.redirect('/en/');
 ---
 
-<HubLayout locale={locale} currentPath="/communication/privatecall">
+<HubLayout locale={locale} currentPath="/communication/privatecall" fillMain>
   <PrivateCallApp client:visible locale={locale} />
 </HubLayout>

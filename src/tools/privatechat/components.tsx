@@ -7,6 +7,7 @@ import { Progress } from '@/components/Progress';
 import type { ChatMessageItem } from '@/tools/privatechat/ChatSession';
 import { isImageMime, isVideoMime } from '@/tools/privatechat/ChatSession';
 import { EmojiPicker, insertTextAtCursor } from '@/tools/privatechat/EmojiPicker';
+import { NavIconInfo, NavIconSend } from '@/components/nav/NavIcons';
 
 function TypingIndicator({ locale }: { locale: Locale }) {
   const dict = getDictionary(locale);
@@ -190,6 +191,23 @@ export function ChatComposer({
   const fileRef = useRef<HTMLInputElement>(null);
   const emojiBtnRef = useRef<HTMLButtonElement>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardInset(inset);
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
 
   const submit = () => {
     const el = inputRef.current;
@@ -202,7 +220,10 @@ export function ChatComposer({
   };
 
   return (
-    <div className="shrink-0 border-t border-border bg-[#202c33] px-3 py-3 md:px-6">
+    <div
+      className="shrink-0 border-t border-border bg-[#202c33] px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-6"
+      style={keyboardInset > 0 ? { paddingBottom: keyboardInset + 12 } : undefined}
+    >
       <div className="flex w-full items-end gap-2">
         <button
           type="button"
@@ -277,10 +298,14 @@ export function ChatComposer({
         <Button
           size="sm"
           disabled={disabled}
-          className="h-10 shrink-0 rounded-full px-5"
+          className="h-10 w-10 shrink-0 rounded-full p-0 sm:h-10 sm:w-auto sm:px-5"
+          aria-label={dict.privatechat.send}
           onClick={submit}
         >
-          {dict.privatechat.send}
+          <span className="sm:hidden">
+            <NavIconSend />
+          </span>
+          <span className="hidden sm:inline">{dict.privatechat.send}</span>
         </Button>
       </div>
     </div>
@@ -334,15 +359,19 @@ export function ChatThreadHeader({
           ) : null}
         </p>
       </div>
-      <details className="relative text-xs text-[#8696a0]">
-        <summary className="cursor-pointer list-none rounded-lg px-2 py-1 hover:bg-white/5 [&::-webkit-details-marker]:hidden">
-          {dict.privatechat.privacyShort}
+      <details className="relative shrink-0 text-[#8696a0]">
+        <summary
+          className="flex cursor-pointer list-none items-center justify-center rounded-lg p-2 hover:bg-white/5 sm:px-2 sm:py-1 [&::-webkit-details-marker]:hidden"
+          aria-label={dict.privatechat.privacyShort}
+        >
+          <span className="hidden text-xs sm:inline">{dict.privatechat.privacyShort}</span>
+          <NavIconInfo className="sm:hidden" />
         </summary>
-        <p className="absolute right-0 top-full z-10 mt-1 max-w-xs rounded-lg border border-border bg-surface p-3 text-[11px] leading-relaxed shadow-lg">
+        <p className="absolute right-0 top-full z-10 mt-1 max-w-[min(100vw-2rem,20rem)] rounded-lg border border-border bg-surface p-3 text-[11px] leading-relaxed shadow-lg">
           {dict.privatechat.encryptionHint}
         </p>
       </details>
-      <Button size="sm" variant="danger" onClick={onLeave}>
+      <Button size="sm" variant="danger" className="shrink-0 max-sm:px-2.5" onClick={onLeave}>
         {dict.privatechat.leave}
       </Button>
     </header>
