@@ -12,7 +12,7 @@ describe('rtcConfig', () => {
 
   it('enables candidate pool and mux for WebRTC', () => {
     const cfg = createRtcConfiguration();
-    expect(cfg.iceCandidatePoolSize).toBe(2);
+    expect(cfg.iceCandidatePoolSize).toBe(4);
     expect(cfg.bundlePolicy).toBe('max-bundle');
     expect(cfg.rtcpMuxPolicy).toBe('require');
   });

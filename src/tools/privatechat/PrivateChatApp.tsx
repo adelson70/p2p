@@ -11,6 +11,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import type { ChatRole } from '@/tools/privatechat/chatConnectionManager';
 import { chatConnectionManager } from '@/tools/privatechat/chatConnectionManager';
@@ -169,19 +170,16 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
     setPairingError(null);
     try {
       const packet = parseSignalingInput(raw);
-      if (packet.role === 'offer') {
-        if (chatRoleRef.current === 'host') {
-          setPairingError(dict.privatechat.wrongRoleOffer);
-          return;
-        }
-        await submitInviteAsGuest(raw);
-      } else {
-        if (chatRoleRef.current === 'guest') {
-          setPairingError(dict.privatechat.wrongRoleAnswer);
-          return;
-        }
-        await submitResponseAsHost(raw);
-      }
+      await runPairingApply(packet, raw, {
+        side: chatRoleRef.current === 'host' ? 'offerer' : 'answerer',
+        phase: session.phase,
+        sessionReady: chatConnectionManager.isReady(),
+        answererSharedResponse: pairingPhase === 'guest-has-response',
+        onApplyOffer: submitInviteAsGuest,
+        onApplyAnswer: submitResponseAsHost,
+        onWrongRoleOffer: () => setPairingError(dict.privatechat.wrongRoleOffer),
+        onWrongRoleAnswer: () => setPairingError(dict.privatechat.wrongRoleAnswer),
+      });
     } catch (e) {
       setPairingError(e instanceof Error ? e.message : dict.privatechat.errorConnection);
     }

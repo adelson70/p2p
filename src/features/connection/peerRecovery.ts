@@ -4,7 +4,7 @@ import { createSignalingPacket, type SignalingPacket } from './signalingManual';
 /** Grace period while ICE/WebRTC is disconnected before ending the session. */
 export const PEER_DISCONNECTED_GRACE_MS = 30_000;
 
-const ICE_RESTART_DELAY_MS = 1_000;
+const ICE_RESTART_DELAY_MS = 300;
 
 export interface PeerRecoveryDeps {
   getPc: () => RTCPeerConnection | null;

@@ -1,6 +1,6 @@
 import {
-  acceptAnswer,
   addIceCandidates,
+  applyRemoteAnswer,
   createOffer,
   createOutboundDataChannel,
   createPeerConnection,
@@ -214,8 +214,7 @@ export class ConnectionManager {
   async applyGuestResponse(guestResponse: SignalingPacket): Promise<void> {
     assertSignalingPacketRole(guestResponse, 'answer');
     const pc = this.ensurePc();
-    await acceptAnswer(pc, guestResponse.sdp);
-    await addIceCandidates(pc, guestResponse.ice);
+    await applyRemoteAnswer(pc, guestResponse.sdp, guestResponse.ice);
     patchConnectionSession({ phase: 'connecting' });
   }
 

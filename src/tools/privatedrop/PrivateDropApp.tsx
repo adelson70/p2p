@@ -13,6 +13,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
 import type { FileRole } from '@/tools/privatedrop/roles';
@@ -150,19 +151,16 @@ export function PrivateDropApp({ locale }: { locale: Locale }) {
     setPairingError(null);
     try {
       const packet = parseSignalingInput(raw);
-      if (packet.role === 'offer') {
-        if (fileRoleRef.current === 'file-sender') {
-          setPairingError(dict.privatedrop.wrongRoleOffer);
-          return;
-        }
-        await submitHostInviteAsGuest(raw);
-      } else {
-        if (fileRoleRef.current === 'file-receiver') {
-          setPairingError(dict.privatedrop.wrongRoleAnswer);
-          return;
-        }
-        await submitGuestResponseAsHost(raw);
-      }
+      await runPairingApply(packet, raw, {
+        side: fileRoleRef.current === 'file-sender' ? 'offerer' : 'answerer',
+        phase: session.phase,
+        sessionReady: connectionManager.isReadyForTransfer(),
+        answererSharedResponse: pairingPhase === 'guest-has-response',
+        onApplyOffer: submitHostInviteAsGuest,
+        onApplyAnswer: submitGuestResponseAsHost,
+        onWrongRoleOffer: () => setPairingError(dict.privatedrop.wrongRoleOffer),
+        onWrongRoleAnswer: () => setPairingError(dict.privatedrop.wrongRoleAnswer),
+      });
     } catch (e) {
       setPairingError(e instanceof Error ? e.message : dict.privatedrop.errorConnection);
     }

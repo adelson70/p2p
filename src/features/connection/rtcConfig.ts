@@ -10,13 +10,13 @@ export const PUBLIC_STUN_SERVERS: RTCIceServer[] = [
 ];
 
 /** Default ICE gathering wait when exchanging full SDP manually (no trickle). */
-export const ICE_GATHER_TIMEOUT_MS = 5_000;
+export const ICE_GATHER_TIMEOUT_MS = 2_000;
 
 export function createRtcConfiguration(): RTCConfiguration {
   return {
     iceServers: PUBLIC_STUN_SERVERS,
     /** Pre-gather candidates before offer/answer when supported. */
-    iceCandidatePoolSize: 2,
+    iceCandidatePoolSize: 4,
     bundlePolicy: 'max-bundle',
     rtcpMuxPolicy: 'require',
     iceTransportPolicy: 'all',

@@ -69,6 +69,10 @@ const adblockGateEnabled = !import.meta.env.DEV;
     {dictDesc ? <meta name="twitter:description" content={dictDesc} /> : null}
     <meta name="theme-color" content="#09090b" />
     <slot name="head" />
+    <script>
+      import { initAppViewportHeight } from '@/lib/syncAppViewportHeight';
+      initAppViewportHeight();
+    </script>
     <script is:inline>
       (function () {
         try {

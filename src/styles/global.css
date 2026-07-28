@@ -29,8 +29,8 @@ body {
 /* Mobile: shell fills viewport; only .app-shell-scroll scrolls (nav/header stay put) */
 @media (max-width: 767px) {
   html:not([data-immersive-shell]) .app-shell {
-    height: 100dvh;
-    max-height: 100dvh;
+    height: var(--app-vh, 100dvh);
+    max-height: var(--app-vh, 100dvh);
     overflow: hidden;
   }
 
@@ -85,13 +85,13 @@ html.pt-adblock {
 
 /* Immersive tool session: lock page scroll, full viewport */
 html[data-immersive-shell] body {
-  height: 100dvh;
+  height: var(--app-vh, 100dvh);
   overflow: hidden;
 }
 
 html[data-immersive-shell] .app-shell--fill {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: var(--app-vh, 100dvh);
+  max-height: var(--app-vh, 100dvh);
   overflow: hidden;
 }
 

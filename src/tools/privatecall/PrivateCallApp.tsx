@@ -11,6 +11,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
 import type { CallRole } from '@/tools/privatecall/callConnectionManager';
@@ -228,19 +229,16 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
     setPairingError(null);
     try {
       const packet = parseSignalingInput(raw);
-      if (packet.role === 'offer') {
-        if (callRoleRef.current === 'caller') {
-          setPairingError(dict.privatecall.wrongRoleOffer);
-          return;
-        }
-        await submitInviteAsCallee(raw);
-      } else {
-        if (callRoleRef.current === 'callee') {
-          setPairingError(dict.privatecall.wrongRoleAnswer);
-          return;
-        }
-        await submitResponseAsCaller(raw);
-      }
+      await runPairingApply(packet, raw, {
+        side: callRoleRef.current === 'caller' ? 'offerer' : 'answerer',
+        phase: session.phase,
+        sessionReady: callConnectionManager.isInCall(),
+        answererSharedResponse: pairingPhase === 'callee-has-response',
+        onApplyOffer: submitInviteAsCallee,
+        onApplyAnswer: submitResponseAsCaller,
+        onWrongRoleOffer: () => setPairingError(dict.privatecall.wrongRoleOffer),
+        onWrongRoleAnswer: () => setPairingError(dict.privatecall.wrongRoleAnswer),
+      });
     } catch (e) {
       setPairingError(e instanceof Error ? e.message : dict.privatecall.errorConnection);
     }

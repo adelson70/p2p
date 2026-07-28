@@ -11,6 +11,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import type { BoardRole } from '@/tools/whiteboard/whiteboardConnectionManager';
 import { whiteboardConnectionManager } from '@/tools/whiteboard/whiteboardConnectionManager';
@@ -168,19 +169,16 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
     setPairingError(null);
     try {
       const packet = parseSignalingInput(raw);
-      if (packet.role === 'offer') {
-        if (boardRoleRef.current === 'host') {
-          setPairingError(dict.whiteboard.wrongRoleOffer);
-          return;
-        }
-        await submitInviteAsGuest(raw);
-      } else {
-        if (boardRoleRef.current === 'guest') {
-          setPairingError(dict.whiteboard.wrongRoleAnswer);
-          return;
-        }
-        await submitResponseAsHost(raw);
-      }
+      await runPairingApply(packet, raw, {
+        side: boardRoleRef.current === 'host' ? 'offerer' : 'answerer',
+        phase: session.phase,
+        sessionReady: whiteboardConnectionManager.isReady(),
+        answererSharedResponse: pairingPhase === 'guest-has-response',
+        onApplyOffer: submitInviteAsGuest,
+        onApplyAnswer: submitResponseAsHost,
+        onWrongRoleOffer: () => setPairingError(dict.whiteboard.wrongRoleOffer),
+        onWrongRoleAnswer: () => setPairingError(dict.whiteboard.wrongRoleAnswer),
+      });
     } catch (e) {
       setPairingError(e instanceof Error ? e.message : dict.whiteboard.errorConnection);
     }

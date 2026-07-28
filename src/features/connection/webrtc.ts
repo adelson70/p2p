@@ -77,11 +77,41 @@ export async function acceptOffer(
   return answer;
 }
 
+export async function applyRemoteAnswer(
+  pc: RTCPeerConnection,
+  answer: RTCSessionDescriptionInit,
+  ice: RTCIceCandidateInit[] = [],
+): Promise<void> {
+  const remote = pc.remoteDescription;
+  const state = pc.signalingState;
+
+  if (state === 'stable' && remote?.type === 'answer') {
+    await addIceCandidates(pc, ice);
+    return;
+  }
+
+  if (state !== 'have-local-offer' && remote?.type === 'answer') {
+    await addIceCandidates(pc, ice);
+    return;
+  }
+
+  try {
+    await pc.setRemoteDescription(answer);
+  } catch {
+    if (pc.remoteDescription?.type === 'answer') {
+      await addIceCandidates(pc, ice);
+      return;
+    }
+    throw new Error('Failed to apply remote answer');
+  }
+  await addIceCandidates(pc, ice);
+}
+
 export async function acceptAnswer(
   pc: RTCPeerConnection,
   answer: RTCSessionDescriptionInit,
 ): Promise<void> {
-  await pc.setRemoteDescription(answer);
+  await applyRemoteAnswer(pc, answer);
 }
 
 export async function addIceCandidates(
