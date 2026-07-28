@@ -24,7 +24,7 @@ const reactJsx = /** @type {const} */ ({
 
 // https://astro.build/config
 export default defineConfig({
-  site: process.env.SITE_URL ?? 'https://private-tools.example',
+  site: process.env.SITE_URL ?? 'https://p2ptools.abjr.dev',
   output: 'static',
   integrations: [
     react(),
