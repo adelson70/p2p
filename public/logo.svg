@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="512" height="512">
+  <defs>
+    <mask id="shield-cutout">
+      <rect width="120" height="120" fill="white" />
+      <!-- Shield shape slightly larger to act as cutout -->
+      <path d="M 56 51 H 114 V 75 C 114 98 85 114 85 114 C 85 114 56 98 56 75 Z" fill="black" />
+    </mask>
+  </defs>
+
+  <!-- Shackle -->
+  <path d="M 30 50 V 35 A 20 20 0 0 1 70 35 V 50" fill="none" stroke="black" stroke-width="16" mask="url(#shield-cutout)" />
+
+  <!-- Lock Body -->
+  <rect x="10" y="50" width="70" height="55" rx="10" fill="black" mask="url(#shield-cutout)" />
+
+  <!-- Keyhole -->
+  <circle cx="40" cy="72" r="7" fill="white" />
+  <rect x="36" y="75" width="8" height="12" rx="4" fill="white" />
+
+  <!-- Shield -->
+  <path d="M 60 55 H 110 V 75 C 110 95 85 110 85 110 C 85 110 60 95 60 75 Z" fill="black" />
+  
+  <!-- Checkmark -->
+  <path d="M 73 80 L 82 89 L 98 69" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

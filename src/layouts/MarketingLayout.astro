@@ -1,0 +1,28 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  canonicalPath: string;
+}
+
+const { locale, title, description, canonicalPath } = Astro.props;
+const dict = getDictionary(locale);
+const pageTitle = `${title} · ${dict.meta.siteName}`;
+---
+
+<BaseLayout locale={locale} title={pageTitle} description={description} canonicalPath={canonicalPath}>
+  <slot name="head" slot="head" />
+  <div class="min-h-dvh bg-[var(--pt-bg)]">
+    <header class="border-b border-border px-4 py-4 md:px-8">
+      <a href={`/${locale}/`} class="font-semibold">{dict.meta.siteName}</a>
+    </header>
+    <main class="mx-auto max-w-3xl px-4 py-10 text-center md:px-8">
+      <slot />
+    </main>
+  </div>
+</BaseLayout>

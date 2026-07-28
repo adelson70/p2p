@@ -1,0 +1,52 @@
+---
+import MarketingLayout from '@/layouts/MarketingLayout.astro';
+import JsonLd from '@/components/JsonLd.astro';
+import type { Locale } from '@/i18n/config';
+import { localePath } from '@/i18n/config';
+import { buildLocalePaths, resolvePageLocale } from '@/i18n/astro';
+
+export function getStaticPaths() {
+  return buildLocalePaths();
+}
+
+const locale = resolvePageLocale(Astro.params.locale);
+if (!locale) return Astro.redirect('/en/');
+const title = 'WeTransfer Alternative — Private, Browser-Based File Sharing';
+const description =
+  'Share files without uploading to a third-party cloud. PrivateDrop is a privacy-first WeTransfer alternative powered by WebRTC.';
+const canonicalPath = '/we-transfer-alternative';
+---
+
+<MarketingLayout {locale} {title} {description} {canonicalPath}>
+  <JsonLd
+    slot="head"
+    data={{
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Is PrivateDrop a WeTransfer replacement?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'For direct device-to-device sharing without cloud uploads, yes. Both peers must be online during the transfer.',
+          },
+        },
+      ],
+    }}
+  />
+  <article class="prose prose-invert max-w-none prose-headings:font-semibold prose-p:text-muted">
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <h2>Cloud upload vs peer-to-peer</h2>
+    <p>
+      Upload-based tools store files on vendor infrastructure. PrivateDrop never receives your file
+      bytes — only you and your peer exchange data after pairing.
+    </p>
+    <h2>Get started</h2>
+    <p>
+      Use <a href={localePath(locale, '/transfer')}>PrivateDrop</a> or read our guide on
+      <a href={localePath(locale, '/send-large-files')}>sending large files without upload</a>.
+    </p>
+  </article>
+</MarketingLayout>

@@ -1,0 +1,63 @@
+---
+import HubLayout from '@/layouts/HubLayout.astro';
+import type { Locale } from '@/i18n/config';
+import { localePath } from '@/i18n/config';
+import { getDictionary } from '@/i18n';
+import JsonLd from '@/components/JsonLd.astro';
+import { buildLocalePaths, resolvePageLocale } from '@/i18n/astro';
+import { AnonymousTransferCanvas } from '@/components/home/AnonymousTransferCanvas';
+
+export function getStaticPaths() {
+  return buildLocalePaths();
+}
+
+const locale = resolvePageLocale(Astro.params.locale);
+if (!locale) return Astro.redirect('/en/');
+const dict = getDictionary(locale);
+---
+
+<HubLayout locale={locale} currentPath="/">
+  <JsonLd
+    data={{
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: dict.meta.siteName,
+      description: dict.meta.description,
+      url: Astro.site?.href,
+    }}
+  />
+  <section class="mx-auto flex w-full max-w-4xl flex-col items-center gap-6 text-center">
+    <p class="text-sm font-medium text-accent">{dict.meta.tagline}</p>
+    <h1 class="text-3xl font-semibold tracking-tight md:text-4xl lg:text-[2.75rem] lg:leading-tight">
+      {dict.home.heroTitle}
+    </h1>
+
+    <AnonymousTransferCanvas
+      client:visible
+      locale={locale}
+      className="min-h-[240px] w-full sm:min-h-[280px]"
+    />
+
+    <p class="max-w-2xl text-lg text-muted">{dict.home.heroSubtitle}</p>
+    <div class="flex flex-wrap justify-center gap-3 pb-2">
+      <a
+        href={localePath(locale, '/transfer')}
+        class="inline-flex rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-600"
+      >
+        {dict.home.ctaPrivateDrop}
+      </a>
+      <a
+        href={localePath(locale, '/tools')}
+        class="inline-flex rounded-xl border border-border px-5 py-2.5 text-sm font-medium hover:bg-white/5"
+      >
+        {dict.home.browseTools}
+      </a>
+      <a
+        href={localePath(locale, '/blog')}
+        class="inline-flex rounded-xl border border-border px-5 py-2.5 text-sm font-medium hover:bg-white/5"
+      >
+        {dict.nav.blog}
+      </a>
+    </div>
+  </section>
+</HubLayout>

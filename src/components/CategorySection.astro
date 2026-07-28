@@ -1,0 +1,29 @@
+---
+import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n';
+import type { ToolCategory, ToolDefinition } from '@/tools/registry';
+import ToolCard from '@/components/ToolCard.astro';
+
+interface Props {
+  locale: Locale;
+  category: ToolCategory;
+  tools: ToolDefinition[];
+}
+
+const { locale, category, tools } = Astro.props;
+const dict = getDictionary(locale);
+const title = dict.categories[category];
+---
+
+{
+  tools.length > 0 && (
+    <section class="space-y-4">
+      <h2 class="text-lg font-medium text-foreground">{title}</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
+        {tools.map((tool) => (
+          <ToolCard locale={locale} tool={tool} />
+        ))}
+      </div>
+    </section>
+  )
+}

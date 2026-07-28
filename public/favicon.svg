@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="64" height="64">
+  <!-- Shield -->
+  <path d="M 15 20 H 105 V 60 C 105 95 60 115 60 115 C 60 115 15 95 15 60 Z" fill="black" />
+  <!-- Checkmark -->
+  <path d="M 35 60 L 55 80 L 85 45" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

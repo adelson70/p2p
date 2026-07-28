@@ -1,0 +1,91 @@
+@import '@fontsource-variable/inter';
+@import './tokens.css';
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-surface: var(--pt-surface);
+  --color-surface-raised: var(--pt-surface-raised);
+  --color-border: var(--pt-border);
+  --color-muted: var(--pt-muted);
+  --color-foreground: var(--pt-foreground);
+  --color-accent: var(--pt-accent);
+  --color-accent-muted: var(--pt-accent-muted);
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--pt-bg);
+  color: var(--pt-foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+/* Full-height tool layouts (Private Chat, Whiteboard): lock page scroll, stretch islands */
+html:has([data-fill-main]) body {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.fill-main-host {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fill-main-host > astro-island {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fill-main-host > astro-island > * {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0%;
+  flex-direction: column;
+  height: 100%;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--pt-accent);
+  outline-offset: 2px;
+}
+
+@keyframes chat-typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.chat-typing-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #8696a0;
+  animation: chat-typing-bounce 1.2s ease-in-out infinite;
+}
+
+.chat-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}

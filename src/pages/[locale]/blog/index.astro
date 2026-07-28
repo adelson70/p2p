@@ -1,0 +1,67 @@
+---
+import MarketingLayout from '@/layouts/MarketingLayout.astro';
+import { localePath } from '@/i18n/config';
+import { getDictionary } from '@/i18n';
+import { buildLocalePaths, resolvePageLocale } from '@/i18n/astro';
+import { getCollection } from 'astro:content';
+import { blogLocaleFromEntry, isPublished, sortBlogByDateDesc, blogSlugFromId } from '@/utils/blog';
+import { localeToIntlTag } from '@/i18n/config';
+
+export function getStaticPaths() {
+  return buildLocalePaths();
+}
+
+const locale = resolvePageLocale(Astro.params.locale);
+if (!locale) return Astro.redirect('/en/');
+
+const dict = getDictionary(locale);
+const title = dict.blog.indexTitle;
+const description = dict.blog.indexDescription;
+const canonicalPath = '/blog';
+
+const posts = (await getCollection('blog'))
+  .filter((entry) => isPublished(entry) && blogLocaleFromEntry(entry) === locale)
+  .sort(sortBlogByDateDesc);
+
+const dateFmt = new Intl.DateTimeFormat(localeToIntlTag(locale), {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<MarketingLayout {locale} {title} {description} {canonicalPath}>
+  <div class="prose prose-invert max-w-none prose-headings:font-semibold prose-p:text-muted">
+    <h1>{title}</h1>
+    <p class="text-muted">{description}</p>
+    {
+      posts.length === 0 ? (
+        <p>{dict.blog.empty}</p>
+      ) : (
+        <ul class="not-prose list-none space-y-6 p-0">
+          {posts.map((post) => (
+            <li class="rounded-xl border border-border bg-surface/40 p-5">
+              <time class="text-xs text-muted" datetime={post.data.pubDate.toISOString()}>
+                {dateFmt.format(post.data.pubDate)}
+              </time>
+              <h2 class="mt-2 text-lg font-semibold text-foreground">
+                <a
+                  class="text-foreground hover:text-accent"
+                  href={localePath(locale, `/blog/${blogSlugFromId(post.id)}`)}
+                >
+                  {post.data.title}
+                </a>
+              </h2>
+              <p class="mt-2 text-sm text-muted">{post.data.description}</p>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    <p class="not-prose mt-10">
+      <a class="text-accent hover:underline" href={localePath(locale, '/')}>
+        {dict.blog.backHome}
+      </a>
+    </p>
+  </div>
+</MarketingLayout>

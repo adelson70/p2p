@@ -1,0 +1,96 @@
+---
+import '@/styles/global.css';
+import type { Locale } from '@/i18n/config';
+import { alternateLocales, localeDefinitions, localePath } from '@/i18n/config';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description?: string;
+  canonicalPath?: string;
+}
+
+const { locale, title, description, canonicalPath = '' } = Astro.props;
+const site = Astro.site?.href?.replace(/\/$/, '') ?? '';
+const canonical = `${site}${localePath(locale, canonicalPath || '/')}`;
+const dictDesc = description;
+const htmlLang = localeDefinitions[locale].bcp47;
+const htmlDir = localeDefinitions[locale].direction;
+const ogLocale =
+  locale === 'en' ? 'en_US' : locale === 'pt' ? 'pt_BR' : locale === 'zh' ? 'zh_CN' : `${locale}_${locale.toUpperCase()}`;
+const defaultCanonical = `${site}${localePath('en', canonicalPath || '/')}`;
+---
+
+<!doctype html>
+<html lang={htmlLang} dir={htmlDir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    {dictDesc ? <meta name="description" content={dictDesc} /> : null}
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={defaultCanonical} />
+    {
+      alternateLocales(locale).map((alt) => (
+        <link
+          rel="alternate"
+          hreflang={localeDefinitions[alt].bcp47}
+          href={`${site}${localePath(alt, canonicalPath || '/')}`}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Private Tools blog"
+      href={`${site}/rss.xml`}
+    />
+    <meta property="og:title" content={title} />
+    {dictDesc ? <meta property="og:description" content={dictDesc} /> : null}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale} />
+    {
+      alternateLocales(locale).map((alt) => (
+        <meta
+          property="og:locale:alternate"
+          content={
+            alt === 'en' ? 'en_US' : alt === 'pt' ? 'pt_BR' : alt === 'zh' ? 'zh_CN' : `${alt}_${alt.toUpperCase()}`
+          }
+        />
+      ))
+    }
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    {dictDesc ? <meta name="twitter:description" content={dictDesc} /> : null}
+    <meta name="theme-color" content="#09090b" />
+    <slot name="head" />
+    <script is:inline>
+      (function () {
+        try {
+          var raw = localStorage.getItem('pt_prefs');
+          var theme = raw ? JSON.parse(raw).theme : 'system';
+          if (theme === 'dark' || theme === 'light') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    {
+      import.meta.env.DEV && (
+        <script is:inline>
+          {`if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              regs.forEach(function (r) { r.unregister(); });
+            });
+          }`}
+        </script>
+      )
+    }
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

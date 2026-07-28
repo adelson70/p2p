@@ -1,0 +1,71 @@
+---
+import MarketingLayout from '@/layouts/MarketingLayout.astro';
+import JsonLd from '@/components/JsonLd.astro';
+import type { Locale } from '@/i18n/config';
+import { localePath } from '@/i18n/config';
+import { buildLocalePaths, resolvePageLocale } from '@/i18n/astro';
+
+export function getStaticPaths() {
+  return buildLocalePaths();
+}
+
+const locale = resolvePageLocale(Astro.params.locale);
+if (!locale) return Astro.redirect('/en/');
+const title = 'Send Large Files — No Upload, Peer-to-Peer';
+const description =
+  'Transfer large files directly between browsers with PrivateDrop. No account, no cloud storage, no server uploads.';
+const canonicalPath = '/send-large-files';
+---
+
+<MarketingLayout {locale} {title} {description} {canonicalPath}>
+  <JsonLd
+    slot="head"
+    data={{
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Do files pass through your servers?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'No. PrivateDrop uses WebRTC data channels so files move directly between devices.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Is there a file size limit?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Limits depend on browser memory and network stability. Chunked streaming supports very large files.',
+          },
+        },
+      ],
+    }}
+  />
+  <article class="prose prose-invert max-w-none prose-headings:font-semibold prose-p:text-muted">
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <h2>Why browser-native transfer?</h2>
+    <p>
+      Traditional file sharing services upload your data to remote servers. Private Tools keeps
+      transfers on-device using modern Web APIs.
+    </p>
+    <h2>How to send large files</h2>
+    <ol>
+      <li>Open <a href={localePath(locale, '/transfer')}>PrivateDrop</a>.</li>
+      <li>Choose Send and share the QR or signaling data with the receiver.</li>
+      <li>Drop your files and start the transfer when connected.</li>
+    </ol>
+    <h2>FAQ</h2>
+    <h3>Do files pass through your servers?</h3>
+    <p>No. Connections are peer-to-peer after manual signaling.</p>
+    <h3>What if the connection fails?</h3>
+    <p>
+      Some corporate networks block direct P2P. Copy refreshed signaling data or try another network.
+    </p>
+    <p>
+      <a href={localePath(locale, '/we-transfer-alternative')}>Compare with WeTransfer-style uploads</a>
+    </p>
+  </article>
+</MarketingLayout>

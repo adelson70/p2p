@@ -1,0 +1,16 @@
+---
+import HubLayout from '@/layouts/HubLayout.astro';
+import { PrivateChatApp } from '@/tools/privatechat/PrivateChatApp';
+import type { Locale } from '@/i18n/config';
+
+import { buildLocalePaths, resolvePageLocale } from '@/i18n/astro';
+export function getStaticPaths() {
+  return buildLocalePaths();
+}
+const locale = resolvePageLocale(Astro.params.locale);
+if (!locale) return Astro.redirect('/en/');
+---
+
+<HubLayout locale={locale} currentPath="/communication/privatechat" fillMain>
+  <PrivateChatApp client:visible locale={locale} />
+</HubLayout>

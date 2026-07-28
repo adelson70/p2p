@@ -1,0 +1,12 @@
+/* TEAM */
+Product: Private Tools
+Site: Privacy-first browser utilities (P2P transfer, chat, calls)
+
+/* THANKS */
+Built with Astro, React, WebRTC, Tailwind CSS
+
+/* SITE */
+Last update: 2026
+Languages: en, pt, es, fr, zh
+Standards: HTML5, CSS, WCAG-oriented UI
+Software: https://github.com/withastro/astro
