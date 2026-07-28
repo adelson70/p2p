@@ -4,7 +4,7 @@ import { isCosmeticBaitBlocked } from '@/features/adblock/detectAdblock';
 describe('isCosmeticBaitBlocked', () => {
   it('returns false when bait metrics look visible', () => {
     expect(
-      isCosmeticBaitBlocked(1, 1, {} as Element, {
+      isCosmeticBaitBlocked(1, 1, {
         display: 'block',
         visibility: 'visible',
         opacity: '1',
@@ -14,7 +14,7 @@ describe('isCosmeticBaitBlocked', () => {
 
   it('returns true when bait is hidden like a cosmetic filter', () => {
     expect(
-      isCosmeticBaitBlocked(0, 1, {} as Element, {
+      isCosmeticBaitBlocked(0, 1, {
         display: 'block',
         visibility: 'visible',
         opacity: '1',
@@ -22,15 +22,7 @@ describe('isCosmeticBaitBlocked', () => {
     ).toBe(true);
 
     expect(
-      isCosmeticBaitBlocked(1, 1, null, {
-        display: 'block',
-        visibility: 'visible',
-        opacity: '1',
-      }),
-    ).toBe(true);
-
-    expect(
-      isCosmeticBaitBlocked(1, 1, {} as Element, {
+      isCosmeticBaitBlocked(1, 1, {
         display: 'none',
         visibility: 'hidden',
         opacity: '0',

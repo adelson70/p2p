@@ -48,7 +48,6 @@ export function AdblockGate({ locale }: Props) {
 
   useEffect(() => {
     applyAdblockDocumentState(blocked);
-    return () => applyAdblockDocumentState(false);
   }, [blocked]);
 
   if (!blocked) return null;

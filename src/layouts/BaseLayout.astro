@@ -99,22 +99,26 @@ const adblockGateEnabled = !import.meta.env.DEV;
           <script is:inline>
             {`(function () {
   function cosmeticBlocked() {
+    var host = document.body;
+    if (!host) return false;
+    var wrap = document.createElement('div');
+    wrap.style.cssText =
+      'position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;z-index:-1;';
     var el = document.createElement('div');
     el.innerHTML = '&nbsp;';
     el.className =
       'pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links advertisement sponsored-content adsbox ad-placement';
-    el.style.cssText =
-      'position:fixed!important;left:-10000px!important;top:-10000px!important;width:1px!important;height:1px!important;';
-    document.documentElement.appendChild(el);
+    el.style.cssText = 'display:block;width:1px;height:1px;';
+    wrap.appendChild(el);
+    host.appendChild(wrap);
     var cs = window.getComputedStyle(el);
     var blocked =
-      !el.offsetParent ||
       el.offsetHeight === 0 ||
       el.offsetWidth === 0 ||
       cs.display === 'none' ||
       cs.visibility === 'hidden' ||
       cs.opacity === '0';
-    el.remove();
+    wrap.remove();
     return blocked;
   }
   function apply(blocked) {
@@ -122,6 +126,9 @@ const adblockGateEnabled = !import.meta.env.DEV;
     if (blocked) {
       document.documentElement.classList.add('pt-adblock');
       document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.documentElement.classList.remove('pt-adblock');
+      document.documentElement.style.overflow = '';
     }
   }
   function run() {
