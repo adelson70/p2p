@@ -13,6 +13,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { ensureConnectionLifecycle } from '@/features/connection/connectionLifecycle';
 import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
@@ -83,14 +84,16 @@ export function PrivateDropApp({ locale }: { locale: Locale }) {
   }, []);
 
   useEffect(() => {
+    ensureConnectionLifecycle();
     connectionManager.setOnDataChannel((ch) => {
       void onDataChannelReady(ch);
     });
+    connectionManager.nudgeRecovery();
     return () => {
       fileSenderRef.current?.dispose();
       fileSenderRef.current = null;
       receiverRef.current = null;
-      connectionManager.close();
+      connectionManager.setOnDataChannel(null);
     };
   }, [onDataChannelReady]);
 

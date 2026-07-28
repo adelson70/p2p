@@ -11,6 +11,7 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { ensureConnectionLifecycle } from '@/features/connection/connectionLifecycle';
 import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
 import { putSession, updateSession } from '@/services/db';
@@ -128,12 +129,26 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
   };
 
   useEffect(() => {
+    ensureConnectionLifecycle();
+
+    const phase = connectionSession.get().phase;
+    const meta = callConnectionManager.getSessionMeta();
+
+    if (callConnectionManager.hasActivePeer()) {
+      if (meta.callRole) syncCallRole(meta.callRole);
+      setLocalStream(callConnectionManager.getLocalStream());
+      if (phase === 'creating' || phase === 'waitingAnswer' || phase === 'connecting') {
+        setStep('pairing');
+      } else if (phase === 'connected' || phase === 'reconnecting') {
+        setStep('call');
+      }
+    }
+
     callConnectionManager.setOnRemoteStream(setRemoteStream);
+    callConnectionManager.nudgeRecovery();
+
     return () => {
-      callConnectionManager.dispose();
-      setLocalStream(null);
-      setRemoteStream(null);
-      sessionLoggedRef.current = false;
+      callConnectionManager.setOnRemoteStream(null);
     };
   }, []);
 

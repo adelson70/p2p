@@ -35,10 +35,19 @@ export class ConnectionManager {
     void this.getRecovery().handleRemoteSignal(packet);
   };
 
-  setOnDataChannel(cb: (ch: RTCDataChannel) => void): void {
+  setOnDataChannel(cb: ((ch: RTCDataChannel) => void) | null): void {
     this.onChannel = cb;
     const ch = this.dataChannel;
-    if (ch?.readyState === 'open') cb(ch);
+    if (ch?.readyState === 'open' && cb) cb(ch);
+  }
+
+  hasActivePeer(): boolean {
+    return this.pc !== null;
+  }
+
+  nudgeRecovery(): void {
+    if (!this.hasActivePeer()) return;
+    this.getRecovery().nudge();
   }
 
   getDataChannel(): RTCDataChannel | null {

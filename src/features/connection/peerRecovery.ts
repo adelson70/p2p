@@ -90,6 +90,27 @@ export class PeerRecoverySession {
     this.iceRestartInFlight = false;
   }
 
+  /** Re-check link after tab focus or UI remount. */
+  nudge(): void {
+    if (this.deps.isEnded()) return;
+    const pc = this.deps.getPc();
+    if (!pc) return;
+    const linkState = pc.connectionState;
+    if (linkState === 'connected') {
+      this.clearGrace();
+      this.deps.onPhaseConnected();
+      return;
+    }
+    if (linkState === 'disconnected' || linkState === 'failed') {
+      this.deps.onPhaseReconnecting();
+      this.scheduleGrace();
+      if (this.deps.isOfferer()) {
+        this.clearIceRestartTimer();
+        void this.runIceRestart();
+      }
+    }
+  }
+
   private scheduleGrace(): void {
     if (this.graceTimer !== null) return;
     this.graceTimer = window.setTimeout(() => {

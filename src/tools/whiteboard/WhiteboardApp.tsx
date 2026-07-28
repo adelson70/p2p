@@ -11,8 +11,15 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { ensureConnectionLifecycle } from '@/features/connection/connectionLifecycle';
 import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
+import {
+  clearLiveBoardSession,
+  getLiveBoardRole,
+  getLiveBoardSession,
+  setLiveBoardSession,
+} from '@/tools/whiteboard/boardRuntime';
 import type { BoardRole } from '@/tools/whiteboard/whiteboardConnectionManager';
 import { whiteboardConnectionManager } from '@/tools/whiteboard/whiteboardConnectionManager';
 import { WhiteboardSession, type BoardStroke } from '@/tools/whiteboard/WhiteboardSession';
@@ -62,8 +69,8 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
       if (endedRef.current) return;
       endedRef.current = true;
 
-      boardSessionRef.current?.dispose();
       boardSessionRef.current = null;
+      clearLiveBoardSession();
       whiteboardConnectionManager.dispose();
       setStep('role');
       setPairingPhase('idle');
@@ -80,30 +87,75 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
     [dict.whiteboard.peerLeft],
   );
 
-  const startBoardSession = useCallback(
-    (channel: RTCDataChannel) => {
-      boardSessionRef.current?.dispose();
-      const bs = new WhiteboardSession(channel, {
+  const bindBoardHandlers = useCallback(
+    (bs: WhiteboardSession) => {
+      bs.setHandlers({
         onStrokesChange: setStrokes,
         onPeerLeave: () => resetAfterBoard(true),
       });
-      boardSessionRef.current = bs;
-      setStrokes(bs.getStrokes());
-      setStep('board');
     },
     [resetAfterBoard],
   );
 
+  const startBoardSession = useCallback(
+    (channel: RTCDataChannel) => {
+      const live = getLiveBoardSession();
+      if (live?.getChannel() === channel) {
+        bindBoardHandlers(live);
+        boardSessionRef.current = live;
+        setStrokes(live.getStrokes());
+        setStep('board');
+        return;
+      }
+      clearLiveBoardSession();
+      const bs = new WhiteboardSession(channel, {
+        onStrokesChange: setStrokes,
+        onPeerLeave: () => resetAfterBoard(true),
+      });
+      setLiveBoardSession(bs, boardRoleRef.current);
+      boardSessionRef.current = bs;
+      setStrokes(bs.getStrokes());
+      setStep('board');
+    },
+    [bindBoardHandlers, resetAfterBoard],
+  );
+
   useEffect(() => {
+    ensureConnectionLifecycle();
+
+    const phase = connectionSession.get().phase;
+    const meta = whiteboardConnectionManager.getSessionMeta();
+    const live = getLiveBoardSession();
+
+    if (live && whiteboardConnectionManager.hasActivePeer()) {
+      const role = getLiveBoardRole() ?? meta.boardRole;
+      if (role) syncBoardRole(role);
+      boardSessionRef.current = live;
+      bindBoardHandlers(live);
+      setStrokes(live.getStrokes());
+      if (phase === 'creating' || phase === 'waitingAnswer') {
+        setStep('pairing');
+      } else {
+        setStep('board');
+      }
+    } else if (
+      whiteboardConnectionManager.hasActivePeer() &&
+      (phase === 'creating' || phase === 'waitingAnswer' || phase === 'connecting')
+    ) {
+      if (meta.boardRole) syncBoardRole(meta.boardRole);
+      setStep('pairing');
+    }
+
     whiteboardConnectionManager.setOnDataChannel((ch) => {
       startBoardSession(ch);
     });
+    whiteboardConnectionManager.nudgeRecovery();
+
     return () => {
-      boardSessionRef.current?.dispose();
       boardSessionRef.current = null;
-      whiteboardConnectionManager.dispose();
+      whiteboardConnectionManager.setOnDataChannel(null);
     };
-  }, [startBoardSession]);
+  }, [bindBoardHandlers, startBoardSession]);
 
   useEffect(() => {
     if (step !== 'board') return;

@@ -1,5 +1,4 @@
 import {
-  acceptAnswer,
   addIceCandidates,
   applyRemoteAnswer,
   createCallControlChannel,
@@ -14,7 +13,7 @@ import {
   type SignalingRole,
 } from '@/features/connection/signalingManual';
 import { generateRoomCode, generateSessionId } from '@/features/connection/roomCode';
-import { patchConnectionSession, resetConnectionSession } from '@/features/connection/connectionSession';
+import { patchConnectionSession, resetConnectionSession, connectionSession } from '@/features/connection/connectionSession';
 import { PeerRecoverySession } from '@/features/connection/peerRecovery';
 import { parseRtcSignalWire, serializeRtcSignalWire } from '@/features/connection/rtcSignalWire';
 import { assertSignalingPacketRole } from '@/tools/privatedrop/roles';
@@ -50,8 +49,17 @@ export class CallConnectionManager {
     }
   };
 
-  setOnRemoteStream(cb: (stream: MediaStream) => void): void {
+  setOnRemoteStream(cb: ((stream: MediaStream) => void) | null): void {
     this.onRemoteStream = cb;
+  }
+
+  hasActivePeer(): boolean {
+    return !this.remoteEnded && this.pc !== null;
+  }
+
+  nudgeRecovery(): void {
+    if (!this.hasActivePeer()) return;
+    this.getRecovery().nudge();
   }
 
   getLocalStream(): MediaStream | null {
@@ -128,6 +136,8 @@ export class CallConnectionManager {
   private bindRemoteTrackEnd(stream: MediaStream): void {
     for (const track of stream.getTracks()) {
       track.addEventListener('ended', () => {
+        const phase = connectionSession.get().phase;
+        if (phase === 'reconnecting') return;
         if (this.pc?.connectionState === 'connected') {
           this.handleRemoteHangUp();
         }

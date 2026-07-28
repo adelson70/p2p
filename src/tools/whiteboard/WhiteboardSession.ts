@@ -25,7 +25,7 @@ export class WhiteboardSession {
 
   constructor(
     private readonly channel: RTCDataChannel,
-    private readonly handlers: WhiteboardSessionHandlers,
+    private handlers: WhiteboardSessionHandlers,
   ) {
     this.onMessage = (ev) => this.routeMessage(ev);
     channel.addEventListener('message', this.onMessage);
@@ -33,6 +33,16 @@ export class WhiteboardSession {
 
   getStrokes(): BoardStroke[] {
     return this.strokes;
+  }
+
+  getChannel(): RTCDataChannel {
+    return this.channel;
+  }
+
+  setHandlers(handlers: WhiteboardSessionHandlers): void {
+    if (this.disposed) return;
+    this.handlers = handlers;
+    handlers.onStrokesChange([...this.strokes]);
   }
 
   beginStroke(id: string, color: string, width: number, point: BoardPoint): void {

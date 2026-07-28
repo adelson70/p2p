@@ -61,6 +61,7 @@ export class ChatSession {
   private fileQueue: File[] = [];
   private sendingFiles = false;
   private disposed = false;
+  private peerTyping = false;
   private onChannelMessage: (ev: MessageEvent) => void;
 
   constructor(
@@ -85,6 +86,17 @@ export class ChatSession {
 
   getMessages(): ChatMessageItem[] {
     return this.messages;
+  }
+
+  getChannel(): RTCDataChannel {
+    return this.channel;
+  }
+
+  setHandlers(handlers: ChatSessionHandlers): void {
+    if (this.disposed) return;
+    this.handlers = handlers;
+    handlers.onMessagesChange([...this.messages]);
+    handlers.onTypingChange(this.peerTyping);
   }
 
   sendText(body: string): void {
@@ -217,6 +229,7 @@ export class ChatSession {
       return;
     }
     if (msg.type === 'typing') {
+      this.peerTyping = msg.active;
       this.handlers.onTypingChange(msg.active);
       return;
     }

@@ -11,8 +11,15 @@ import {
   parseSignalingInput,
   renderSignalingQrDataUrl,
 } from '@/features/connection/pairingQr';
+import { ensureConnectionLifecycle } from '@/features/connection/connectionLifecycle';
 import { runPairingApply } from '@/features/connection/pairingApply';
 import { runTogglePairingQr } from '@/features/connection/openPairingQr';
+import {
+  clearLiveChatSession,
+  getLiveChatRole,
+  getLiveChatSession,
+  setLiveChatSession,
+} from '@/tools/privatechat/chatRuntime';
 import type { ChatRole } from '@/tools/privatechat/chatConnectionManager';
 import { chatConnectionManager } from '@/tools/privatechat/chatConnectionManager';
 import { ChatSession, type ChatMessageItem } from '@/tools/privatechat/ChatSession';
@@ -60,8 +67,8 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
       if (endedRef.current) return;
       endedRef.current = true;
 
-      chatSessionRef.current?.dispose();
       chatSessionRef.current = null;
+      clearLiveChatSession();
       chatConnectionManager.dispose();
       setStep('role');
       setPairingPhase('idle');
@@ -79,9 +86,30 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
     [dict.privatechat.peerLeft],
   );
 
+  const bindChatHandlers = useCallback(
+    (cs: ChatSession) => {
+      cs.setHandlers({
+        onMessagesChange: setMessages,
+        onTypingChange: setPeerTyping,
+        onPeerLeave: () => {
+          resetAfterChat(true);
+        },
+      });
+    },
+    [resetAfterChat],
+  );
+
   const startChatSession = useCallback(
     (channel: RTCDataChannel) => {
-      chatSessionRef.current?.dispose();
+      const live = getLiveChatSession();
+      if (live?.getChannel() === channel) {
+        bindChatHandlers(live);
+        chatSessionRef.current = live;
+        setMessages(live.getMessages());
+        setStep('chat');
+        return;
+      }
+      clearLiveChatSession();
       const cs = new ChatSession(channel, {
         onMessagesChange: setMessages,
         onTypingChange: setPeerTyping,
@@ -89,22 +117,49 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
           resetAfterChat(true);
         },
       });
+      setLiveChatSession(cs, chatRoleRef.current);
       chatSessionRef.current = cs;
       setStep('chat');
     },
-    [resetAfterChat],
+    [bindChatHandlers, resetAfterChat],
   );
 
   useEffect(() => {
+    ensureConnectionLifecycle();
+
+    const phase = connectionSession.get().phase;
+    const meta = chatConnectionManager.getSessionMeta();
+    const live = getLiveChatSession();
+
+    if (live && chatConnectionManager.hasActivePeer()) {
+      const role = getLiveChatRole() ?? meta.chatRole;
+      if (role) syncChatRole(role);
+      chatSessionRef.current = live;
+      bindChatHandlers(live);
+      setMessages(live.getMessages());
+      if (phase === 'creating' || phase === 'waitingAnswer') {
+        setStep('pairing');
+      } else {
+        setStep('chat');
+      }
+    } else if (
+      chatConnectionManager.hasActivePeer() &&
+      (phase === 'creating' || phase === 'waitingAnswer' || phase === 'connecting')
+    ) {
+      if (meta.chatRole) syncChatRole(meta.chatRole);
+      setStep('pairing');
+    }
+
     chatConnectionManager.setOnDataChannel((ch) => {
       startChatSession(ch);
     });
+    chatConnectionManager.nudgeRecovery();
+
     return () => {
-      chatSessionRef.current?.dispose();
       chatSessionRef.current = null;
-      chatConnectionManager.dispose();
+      chatConnectionManager.setOnDataChannel(null);
     };
-  }, [startChatSession]);
+  }, [bindChatHandlers, startChatSession]);
 
   useEffect(() => {
     if (step !== 'chat') return;
