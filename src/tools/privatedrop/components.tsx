@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n';
 import { Button } from '@/components/Button';
@@ -150,6 +151,63 @@ export function SignalingCodeField({
   );
 }
 
+function PairingQrModal({
+  locale,
+  roomCode,
+  qrDataUrl,
+  loading,
+  onClose,
+}: {
+  locale: Locale;
+  roomCode?: string;
+  qrDataUrl?: string;
+  loading?: boolean;
+  onClose: () => void;
+}) {
+  const dict = getDictionary(locale);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex flex-col bg-black/92 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+      role="dialog"
+      aria-modal
+      aria-label={dict.privatedrop.showQr}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
+        {roomCode ? (
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-wide text-white/60">{dict.privatedrop.roomCode}</p>
+            <p className="font-mono text-2xl tracking-[0.35em] text-white sm:text-3xl">{roomCode}</p>
+          </div>
+        ) : null}
+        {loading || !qrDataUrl ? (
+          <p className="text-sm text-white/70">{dict.privatedrop.showQr}…</p>
+        ) : (
+          <img
+            src={qrDataUrl}
+            alt=""
+            className="aspect-square w-[min(92vw,calc(100dvh-10rem),42rem)] max-w-none rounded-xl bg-white p-3 shadow-2xl sm:p-4"
+          />
+        )}
+      </div>
+      <Button size="lg" variant="secondary" className="mx-auto w-full max-w-md shrink-0" onClick={onClose}>
+        {dict.privatedrop.closeScanner}
+      </Button>
+    </div>
+  );
+}
+
 export function ShareSignalingBlock({
   locale,
   roomCode,
@@ -174,8 +232,8 @@ export function ShareSignalingBlock({
   const dict = getDictionary(locale);
   const [busy, setBusy] = useState(false);
 
-  const handleToggleQr = async () => {
-    if (busy || qrLoading) return;
+  const handleShowQr = async () => {
+    if (busy || qrLoading || qrVisible) return;
     setBusy(true);
     try {
       await onToggleQr();
@@ -184,7 +242,9 @@ export function ShareSignalingBlock({
     }
   };
 
-  const showQrBlock = qrVisible && (qrDataUrl || busy || qrLoading);
+  const handleCloseQr = () => {
+    if (qrVisible) void onToggleQr();
+  };
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface-raised/50 p-4">
@@ -198,25 +258,22 @@ export function ShareSignalingBlock({
         <Button size="sm" variant="secondary" onClick={onCopy}>
           {copied ? dict.privatedrop.copied : copyLabel}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => void handleToggleQr()} disabled={busy || qrLoading}>
-          {qrVisible ? dict.privatedrop.hideQr : dict.privatedrop.showQr}
+        <Button size="sm" variant="ghost" onClick={() => void handleShowQr()} disabled={busy || qrLoading}>
+          {dict.privatedrop.showQr}
         </Button>
       </div>
-      {showQrBlock ? (
-        <div className="flex justify-center pt-1">
-          {qrDataUrl ? (
-            <img
-              src={qrDataUrl}
-              alt=""
-              className="max-w-full rounded-lg border border-border bg-white p-2"
-              width={280}
-              height={280}
-            />
-          ) : (
-            <p className="py-8 text-sm text-muted">{dict.privatedrop.showQr}…</p>
-          )}
-        </div>
-      ) : null}
+      {qrVisible && typeof document !== 'undefined'
+        ? createPortal(
+            <PairingQrModal
+              locale={locale}
+              roomCode={roomCode}
+              qrDataUrl={qrDataUrl}
+              loading={busy || qrLoading || !qrDataUrl}
+              onClose={handleCloseQr}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

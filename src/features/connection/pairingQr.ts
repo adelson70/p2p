@@ -59,7 +59,7 @@ function isQrCapacityError(err: unknown): boolean {
 
 const QR_RENDER_OPTIONS = {
   margin: 2,
-  width: 400,
+  width: 768,
   errorCorrectionLevel: 'M' as const,
   color: { dark: '#000000', light: '#ffffff' },
 } as const;
