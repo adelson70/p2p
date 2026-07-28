@@ -13,6 +13,8 @@ import {
 } from './signalingManual';
 import { generateRoomCode, generateSessionId } from './roomCode';
 import { patchConnectionSession, resetConnectionSession } from './connectionSession';
+import { PeerRecoverySession } from './peerRecovery';
+import { parseRtcSignalWire, serializeRtcSignalWire } from './rtcSignalWire';
 import type { FileRole } from '@/tools/privatedrop/roles';
 import { assertSignalingPacketRole } from '@/tools/privatedrop/roles';
 import { ICE_GATHER_TIMEOUT_MS } from '@/features/connection/rtcConfig';
@@ -25,6 +27,13 @@ export class ConnectionManager {
   private fileRole: FileRole = 'file-sender';
   private dataChannel: RTCDataChannel | null = null;
   private onChannel: ((ch: RTCDataChannel) => void) | null = null;
+  private recovery: PeerRecoverySession | null = null;
+  private readonly onRtcSignalMessage = (ev: MessageEvent) => {
+    if (typeof ev.data !== 'string') return;
+    const packet = parseRtcSignalWire(ev.data);
+    if (!packet) return;
+    void this.getRecovery().handleRemoteSignal(packet);
+  };
 
   setOnDataChannel(cb: (ch: RTCDataChannel) => void): void {
     this.onChannel = cb;
@@ -54,11 +63,46 @@ export class ConnectionManager {
   }
 
   private resetPeer(): void {
+    this.recovery?.dispose();
+    this.recovery = null;
+    if (this.dataChannel) {
+      this.dataChannel.removeEventListener('message', this.onRtcSignalMessage);
+    }
     this.dataChannel?.close();
     this.pc?.close();
     this.pc = null;
     this.dataChannel = null;
     this.iceBuffer = [];
+  }
+
+  private getRecovery(): PeerRecoverySession {
+    if (!this.recovery) {
+      this.recovery = new PeerRecoverySession({
+        getPc: () => this.pc,
+        isOfferer: () => this.fileRole === 'file-sender',
+        isEnded: () => !this.pc,
+        clearIceBuffer: () => {
+          this.iceBuffer = [];
+        },
+        getIceBuffer: () => this.iceBuffer,
+        onPhaseReconnecting: () => patchConnectionSession({ phase: 'reconnecting' }),
+        onPhaseConnected: () => patchConnectionSession({ phase: 'connected' }),
+        onPhaseConnecting: () => patchConnectionSession({ phase: 'connecting' }),
+        onRecoveryFailed: () => {
+          patchConnectionSession({ phase: 'failed', error: 'Connection failed' });
+          this.resetPeer();
+        },
+        sendSignal: (packet) => this.sendRtcSignal(packet),
+        waitIceGathering: (pc) => this.waitForIceGathering(pc),
+      });
+    }
+    return this.recovery;
+  }
+
+  private sendRtcSignal(packet: SignalingPacket): void {
+    const ch = this.dataChannel;
+    if (ch?.readyState !== 'open') return;
+    ch.send(serializeRtcSignalWire(packet));
   }
 
   private ensurePc(): RTCPeerConnection {
@@ -69,14 +113,9 @@ export class ConnectionManager {
         this.iceBuffer.push(candidate);
       },
       onConnectionStateChange: (state) => {
-        if (state === 'connected') {
-          patchConnectionSession({ phase: 'connected' });
-        } else if (state === 'failed') {
-          patchConnectionSession({ phase: 'failed', error: 'Connection failed' });
-        } else if (state === 'closed') {
+        this.getRecovery().handleConnectionState(state);
+        if (state === 'closed') {
           patchConnectionSession({ phase: 'closed' });
-        } else if (state === 'connecting') {
-          patchConnectionSession({ phase: 'connecting' });
         }
       },
       onDataChannel: (channel) => {
@@ -98,6 +137,7 @@ export class ConnectionManager {
       this.onChannel?.(channel);
     };
     channel.addEventListener('open', tryNotify);
+    channel.addEventListener('message', this.onRtcSignalMessage);
     pc?.addEventListener('connectionstatechange', tryNotify);
     tryNotify();
   }

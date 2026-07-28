@@ -225,7 +225,9 @@ export function PrivateChatApp({ locale }: { locale: Locale }) {
 
   const connectionLabel = (() => {
     if (chatConnectionManager.isReady()) return dict.privatechat.statusConnected;
+    if (session.phase === 'reconnecting') return dict.privatechat.statusReconnecting;
     const state = chatConnectionManager.getConnectionState();
+    if (state === 'disconnected') return dict.privatechat.statusReconnecting;
     if (state === 'failed') return dict.privatechat.statusFailed;
     if (state === 'connecting' || state === 'new') return dict.privatechat.statusConnecting;
     return dict.privatechat.statusSignaling;

@@ -26,7 +26,7 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className="app-mobile-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="app-mobile-bottom-nav z-30 shrink-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label={dict.nav.tools}
     >
       <div className="grid h-16 grid-cols-4">

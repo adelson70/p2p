@@ -35,7 +35,7 @@ const navItems = [
   data-fill-main={fillMain || undefined}
 >
   <header
-    class="app-mobile-header flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-4 py-3 md:hidden"
+    class="app-mobile-header z-30 flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface px-4 py-3 md:hidden"
   >
     <a href={localePath(locale, '/')} class="font-semibold tracking-tight">
       {dict.meta.siteName}
@@ -78,34 +78,36 @@ const navItems = [
     </nav>
   </aside>
 
-  <div class="flex min-h-0 flex-1 flex-col">
-    <main
-      class:list={[
-        'app-main flex min-h-0 flex-1 flex-col',
-        fillMain ? 'p-0' : 'app-main--padded px-4 py-6 md:px-8 md:py-10',
-      ]}
-    >
-      {
-        fillMain ? (
-          <div class="fill-main-host fill-main-host--scroll">
-            <slot />
-          </div>
-        ) : (
-          <div class="mx-auto flex w-full max-w-5xl flex-col items-center">
-            <div class="w-full">
+  <div class="flex min-h-0 flex-1 flex-col md:flex-row md:overflow-visible">
+    <div class="app-shell-scroll flex min-h-0 flex-1 flex-col md:overflow-visible">
+      <main
+        class:list={[
+          'app-main flex min-h-0 flex-col md:flex-1',
+          fillMain ? 'p-0' : 'app-main--padded px-4 py-6 md:px-8 md:py-10',
+        ]}
+      >
+        {
+          fillMain ? (
+            <div class="fill-main-host fill-main-host--scroll">
               <slot />
             </div>
-          </div>
-        )
+          ) : (
+            <div class="mx-auto flex w-full max-w-5xl flex-col items-center">
+              <div class="w-full">
+                <slot />
+              </div>
+            </div>
+          )
+        }
+      </main>
+      {
+        !fillMain ? (
+          <footer class="app-footer shrink-0 border-t border-border px-4 py-4 text-center text-xs text-muted md:px-8">
+            {dict.footer.privacy}
+          </footer>
+        ) : null
       }
-    </main>
-    {
-      !fillMain ? (
-        <footer class="app-footer border-t border-border px-4 py-4 text-center text-xs text-muted md:px-8">
-          {dict.footer.privacy}
-        </footer>
-      ) : null
-    }
+    </div>
   </div>
 
   <MobileBottomNav client:idle locale={locale} currentPath={currentPath} />

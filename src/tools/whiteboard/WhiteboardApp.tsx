@@ -224,7 +224,9 @@ export function WhiteboardApp({ locale }: { locale: Locale }) {
 
   const connectionLabel = (() => {
     if (whiteboardConnectionManager.isReady()) return dict.whiteboard.statusConnected;
+    if (session.phase === 'reconnecting') return dict.whiteboard.statusReconnecting;
     const state = whiteboardConnectionManager.getConnectionState();
+    if (state === 'disconnected') return dict.whiteboard.statusReconnecting;
     if (state === 'failed') return dict.whiteboard.statusFailed;
     if (state === 'connecting' || state === 'new') return dict.whiteboard.statusConnecting;
     return dict.whiteboard.statusSignaling;

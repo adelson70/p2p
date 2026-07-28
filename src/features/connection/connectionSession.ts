@@ -7,6 +7,7 @@ export type ConnectionPhase =
   | 'waitingAnswer'
   | 'connecting'
   | 'connected'
+  | 'reconnecting'
   | 'failed'
   | 'closed';
 

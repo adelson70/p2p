@@ -232,7 +232,9 @@ export function PrivateDropApp({ locale }: { locale: Locale }) {
 
   const connectionLabel = (() => {
     if (connectionManager.isReadyForTransfer()) return dict.privatedrop.statusConnected;
+    if (session.phase === 'reconnecting') return dict.privatedrop.statusReconnecting;
     const state = connectionManager.getConnectionState();
+    if (state === 'disconnected') return dict.privatedrop.statusReconnecting;
     if (state === 'failed') return dict.privatedrop.statusFailed;
     if (state === 'connecting' || state === 'new') return dict.privatedrop.statusConnecting;
     return dict.privatedrop.statusSignaling;

@@ -284,7 +284,9 @@ export function PrivateCallApp({ locale }: { locale: Locale }) {
 
   const connectionLabel = (() => {
     if (callConnectionManager.isInCall()) return dict.privatecall.statusConnected;
+    if (session.phase === 'reconnecting') return dict.privatecall.statusReconnecting;
     const state = callConnectionManager.getConnectionState();
+    if (state === 'disconnected') return dict.privatecall.statusReconnecting;
     if (state === 'failed') return dict.privatecall.statusFailed;
     if (state === 'connecting' || state === 'new') return dict.privatecall.statusConnecting;
     return dict.privatecall.statusSignaling;

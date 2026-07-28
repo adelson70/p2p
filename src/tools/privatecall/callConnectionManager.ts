@@ -14,6 +14,8 @@ import {
 } from '@/features/connection/signalingManual';
 import { generateRoomCode, generateSessionId } from '@/features/connection/roomCode';
 import { patchConnectionSession, resetConnectionSession } from '@/features/connection/connectionSession';
+import { PeerRecoverySession } from '@/features/connection/peerRecovery';
+import { parseRtcSignalWire, serializeRtcSignalWire } from '@/features/connection/rtcSignalWire';
 import { assertSignalingPacketRole } from '@/tools/privatedrop/roles';
 import { ICE_GATHER_TIMEOUT_MS } from '@/features/connection/rtcConfig';
 
@@ -31,6 +33,21 @@ export class CallConnectionManager {
   private controlChannel: RTCDataChannel | null = null;
   private remoteEnded = false;
   private onRemoteStream: ((stream: MediaStream) => void) | null = null;
+  private recovery: PeerRecoverySession | null = null;
+  private readonly onControlChannelMessage = (ev: MessageEvent) => {
+    if (typeof ev.data !== 'string') return;
+    const rtc = parseRtcSignalWire(ev.data);
+    if (rtc) {
+      void this.getRecovery().handleRemoteSignal(rtc);
+      return;
+    }
+    try {
+      const msg = JSON.parse(ev.data) as ControlMessage;
+      if (msg.type === 'hangup') this.handleRemoteHangUp();
+    } catch {
+      // ignore
+    }
+  };
 
   setOnRemoteStream(cb: (stream: MediaStream) => void): void {
     this.onRemoteStream = cb;
@@ -41,10 +58,45 @@ export class CallConnectionManager {
   }
 
   private resetPeer(): void {
+    this.recovery?.dispose();
+    this.recovery = null;
+    if (this.controlChannel) {
+      this.controlChannel.removeEventListener('message', this.onControlChannelMessage);
+    }
     this.controlChannel = null;
     this.pc?.close();
     this.pc = null;
     this.iceBuffer = [];
+  }
+
+  private getRecovery(): PeerRecoverySession {
+    if (!this.recovery) {
+      this.recovery = new PeerRecoverySession({
+        getPc: () => this.pc,
+        isOfferer: () => this.callRole === 'caller',
+        isEnded: () => this.remoteEnded,
+        clearIceBuffer: () => {
+          this.iceBuffer = [];
+        },
+        getIceBuffer: () => this.iceBuffer,
+        onPhaseReconnecting: () => patchConnectionSession({ phase: 'reconnecting' }),
+        onPhaseConnected: () => {
+          this.remoteEnded = false;
+          patchConnectionSession({ phase: 'connected' });
+        },
+        onPhaseConnecting: () => patchConnectionSession({ phase: 'connecting' }),
+        onRecoveryFailed: () => this.handleRemoteHangUp(),
+        sendSignal: (packet) => this.sendRtcSignal(packet),
+        waitIceGathering: (pc) => this.waitForIceGathering(pc),
+      });
+    }
+    return this.recovery;
+  }
+
+  private sendRtcSignal(packet: SignalingPacket): void {
+    const ch = this.controlChannel;
+    if (ch?.readyState !== 'open') return;
+    ch.send(serializeRtcSignalWire(packet));
   }
 
   private stopLocalMedia(): void {
@@ -61,15 +113,7 @@ export class CallConnectionManager {
 
   private attachControlChannel(channel: RTCDataChannel): void {
     this.controlChannel = channel;
-    channel.addEventListener('message', (ev) => {
-      if (typeof ev.data !== 'string') return;
-      try {
-        const msg = JSON.parse(ev.data) as ControlMessage;
-        if (msg.type === 'hangup') this.handleRemoteHangUp();
-      } catch {
-        // ignore
-      }
-    });
+    channel.addEventListener('message', this.onControlChannelMessage);
   }
 
   private handleRemoteHangUp(): void {
@@ -98,17 +142,9 @@ export class CallConnectionManager {
         this.iceBuffer.push(candidate);
       },
       onConnectionStateChange: (state) => {
-        if (state === 'connected') {
-          this.remoteEnded = false;
-          patchConnectionSession({ phase: 'connected' });
-        } else if (state === 'disconnected' || state === 'failed') {
-          if (!this.remoteEnded) this.handleRemoteHangUp();
-        } else if (state === 'closed') {
-          if (!this.remoteEnded) {
-            patchConnectionSession({ phase: 'closed' });
-          }
-        } else if (state === 'connecting') {
-          patchConnectionSession({ phase: 'connecting' });
+        this.getRecovery().handleConnectionState(state);
+        if (state === 'closed' && !this.remoteEnded) {
+          patchConnectionSession({ phase: 'closed' });
         }
       },
       onDataChannel: (channel) => {

@@ -26,6 +26,36 @@ body {
   min-height: 100dvh;
 }
 
+/* Mobile: shell fills viewport; only .app-shell-scroll scrolls (nav/header stay put) */
+@media (max-width: 767px) {
+  html:not([data-immersive-shell]) .app-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  html:not([data-immersive-shell]) .app-shell-scroll {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html:not([data-immersive-shell]) .app-mobile-header,
+  html:not([data-immersive-shell]) .app-mobile-bottom-nav {
+    flex-shrink: 0;
+  }
+}
+
+/* Desktop hub pages: normal document scroll */
+@media (min-width: 768px) {
+  .app-shell-scroll {
+    overflow: visible;
+  }
+}
+
 html.pt-adblock body > :not([data-pt-adblock-overlay]) {
   pointer-events: none;
   user-select: none;
@@ -36,14 +66,10 @@ html.pt-adblock {
   overflow: hidden;
 }
 
-/* Mobile main/footer clearance above bottom nav */
+/* Mobile main/footer: small bottom pad only (nav is in shell chrome, not overlay) */
 @media (max-width: 767px) {
   .app-main--padded {
-    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px) + 1.5rem);
-  }
-
-  .app-footer {
-    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 1.5rem;
   }
 }
 
@@ -66,6 +92,12 @@ html[data-immersive-shell] body {
 html[data-immersive-shell] .app-shell--fill {
   height: 100dvh;
   max-height: 100dvh;
+  overflow: hidden;
+}
+
+html[data-immersive-shell] .app-shell-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -107,6 +139,7 @@ html:not([data-immersive-shell]) .app-shell--fill .app-main {
 html:not([data-immersive-shell]) .fill-main-host--scroll {
   overflow: visible;
   flex: 1 1 auto;
+  min-height: min-content;
 }
 
 html[data-immersive-shell] .fill-main-host {
@@ -130,8 +163,14 @@ html[data-immersive-shell] .fill-main-host > astro-island > * {
 }
 
 @media (max-width: 767px) {
-  .app-shell--fill .fill-main-host--scroll:not(:has(.fill-main-immersive)) {
-    padding-bottom: calc(var(--spacing-mobile-nav) + env(safe-area-inset-bottom, 0px));
+  html:not([data-immersive-shell]) .app-shell--fill .app-shell-scroll {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html:not([data-immersive-shell]) .app-shell--fill .app-main {
+    flex: 1 1 auto;
+    min-height: min-content;
   }
 }
 
