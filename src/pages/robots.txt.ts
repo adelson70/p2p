@@ -31,6 +31,9 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
+# LLM-readable site summary: /llms.txt
+
+Sitemap: ${base}/sitemap.xml
 Sitemap: ${base}/sitemap-index.xml
 `;
 

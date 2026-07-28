@@ -67,7 +67,8 @@ ${blogLines.join('\n')}
 
 - [Full llms index](${base}/llms-full.txt): all blog posts with titles and descriptions per locale
 - [RSS feed](${base}/rss.xml): latest blog posts
-- [Sitemap](${base}/sitemap-index.xml)
+- [Sitemap](${base}/sitemap.xml)
+- [Sitemap index](${base}/sitemap-index.xml)
 
 ## Optional
 

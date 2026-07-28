@@ -9,6 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SITE } from './src/site.ts';
+import { sitemapXmlAlias } from './src/integrations/sitemapXmlAlias.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,7 +41,9 @@ export default defineConfig({
           zh: 'zh-Hans',
         },
       },
+      customPages: [`${SITE}/llms.txt`, `${SITE}/llms-full.txt`, `${SITE}/rss.xml`],
     }),
+    sitemapXmlAlias(),
     mdx(),
   ],
   adapter: useCloudflareAdapter
